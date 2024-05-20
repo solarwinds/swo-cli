@@ -1,13 +1,14 @@
 # swo-cli command-line search client for SolarWinds Observability log management service
 
 Small standalone command line tool to retrieve and search recent app
-server log and system syslog messages from [Solarwinds].
+server metrics from [Solarwinds].
 
-### This is v1 of the swo-cli and it DOES NOT support tailing of the logs.
+### This is v1 of the swo-cli and it supports ONLY logs search.
+### This is v1 of the swo-cli and it DOES NOT support tailing.
 
 Supports optional Boolean search queries. Example:
 
-    $ swo-cli "(www OR db) (nginx OR pgsql) -accepted"
+    $ swo-cli logs "(www OR db) (nginx OR pgsql) -accepted"
 
 Output is line-buffered so it can be fed into a pipe, like for grep.
 ANSI color codes are rendered in color on suitable terminals; see below for
@@ -28,7 +29,7 @@ The API token can also be passed in the `SWOKEN`
 environment variable instead of a configuration file. Example:
 
     $ export SWOKEN='123456789012345678901234567890ab'
-    $ swo-cli
+    $ swo-cli logs
 
 
 ## Configuration
@@ -45,7 +46,10 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
 ## Usage & Examples
 
     $ swo --help
-    swo-cli - command-line search for SolarWinds Observability log management service
+    Usage: ./swo-cli <command> [options]
+
+    Commands:
+      logs - command-line search for SolarWinds Observability log management service
         -h,           --help                                                             Show usage
               --count NUMBER                                  Number of log entries to search (100)
               --min-time MIN                                           Earliest time to search from
@@ -56,19 +60,19 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
         -j,           --json                                             Output raw JSON data (off)
             --color [program|system|all|off]
         -V,        --version                                           Display the version and exit
-    
-      Usage:
-        swo-cli [--min-time time] [--max-time time] [-g group] [-s system]
-          [-c swo-cli.yml] [-j] [--color attributes] [--] [query]
-    
-      Examples:
-      swo-cli something
-      swo-cli 1.2.3 Failure
-      swo-cli -s ns1 "connection refused"
-      swo-cli "(www OR db) (nginx OR pgsql) -accepted"
-      swo-cli -g <SWO_GROUP_ID> --color all "(nginx OR pgsql) -accepted"
-      swo-cli --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
-      swo-cli -- -redis
+
+        Usage:
+          swo-cli logs [--min-time time] [--max-time time] [-g group-id] [-s system]
+            [-c swo-cli.yml] [-j] [--color attributes] [--] [query]
+
+        Examples:
+        ./swo-cli logs something
+        ./swo-cli logs 1.2.3 Failure
+        ./swo-cli logs -s ns1 "connection refused"
+        ./swo-cli logs "(www OR db) (nginx OR pgsql) -accepted"
+        ./swo-cli logs -g <SWO_GROUP_ID> --color all "(nginx OR pgsql) -accepted"
+        ./swo-cli logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
+        ./swo-cli logs -- -redis
 
 
 ### Count, pivot, and summarize
@@ -76,19 +80,19 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
 To count the number of matches, pipe to `wc -l`. For example, count how
 many logs contained `Failure` in the last minute:
 
-    $ swo-cli --min-time '1 minute ago' Failure | wc -l
+    $ swo-cli logs --min-time '1 minute ago' Failure | wc -l
     42
 
 Output only the program/file name (which is output as field 5):
 
-    $ swo-cli --min-time '1 minute ago' | cut -f 5 -d ' '
+    $ swo-cli logs --min-time '1 minute ago' | cut -f 5 -d ' '
     passenger.log:
     sshd:
     app/web.2:
 
 Count by source/system name (field 4):
 
-    $ swo-cli --min-time '1 minute ago' | cut -f 4 -d ' ' | sort | uniq -c
+    $ swo-cli logs --min-time '1 minute ago' | cut -f 4 -d ' ' | sort | uniq -c
       98 www42
       39 acmedb-core01
       2 fastly
@@ -111,22 +115,22 @@ For content-based colorization, pipe through [lnav]. Install `lnav` from your
 preferred package repository, such as `brew install lnav` or
 `apt-get install lnav`, then:
 
-    $ swo-cli | lnav
-    $ swo-cli --min-time "1 hour ago" error | lnav
+    $ swo-cli logs | lnav
+    $ swo-cli logs --min-time "1 hour ago" error | lnav
 
 ### Redirecting output
 
 Since output is line-buffered, pipes and output redirection will automatically
 work:
 
-    $ swo-cli | less
-    $ swo-cli --min-time '2016-01-15 10:00:00' > logs.txt
+    $ swo-cli logs | less
+    $ swo-cli logs --min-time '2016-01-15 10:00:00' > logs.txt
 
 If you frequently pipe output to a certain command, create a function which
 accepts optional arguments, invokes `swo-cli` with any arguments, and pipes
 output to that command. For example, this `swo` function will pipe to `lnav`:
 
-    $ function swo() { swo $* | lnav; }
+    $ function swo() { swo-cli logs $* | lnav; }
 
 Add the `function` line to your `~/.bashrc`. It can be invoked with search
 parameters:
@@ -141,7 +145,7 @@ Usually this is moot because most searches start with a positive match.
 To search only for log messages without a given string, use `--`. For
 example, to search for `-whatever`, run:
 
-    swo-cli -- -whatever
+    swo-cli logs -- -whatever
 
 ### Time zones
 
@@ -153,7 +157,7 @@ When providing absolute times, append `UTC` to provide the input time in
 UTC. For example, regardless of the local PC time zone, this will show
 messages beginning from 1 PM UTC:
 
-    swo-cli --min-time "2024-04-27 13:00:00 UTC"
+    swo-cli logs --min-time "2024-04-27 13:00:00 UTC"
 
 Output timestamps will still be in the local PC time zone.
 
@@ -163,7 +167,7 @@ Because the Unix shell parses and strips one set of quotes around a
 phrase, to search for a phrase, wrap the string in both single-quotes
 and double-quotes. For example:
 
-    swo-cli '"Connection reset by peer"'
+    swo-cli logs '"Connection reset by peer"'
 
 Use one set of double-quotes and one set of single-quotes. The order
 does not matter as long as the pairs are consistent.
@@ -174,8 +178,8 @@ result, quoting strings twice is often not actually necessary. For
 example, these two searches are likely to yield the same log messages,
 even though one is for 4 words (AND) while the other is for a phrase:
 
-    swo-cli Connection reset by peer
-    swo-cli '"Connection reset by peer"'
+    swo-cli logs Connection reset by peer
+    swo-cli logs '"Connection reset by peer"'
 
 ### Multiple API tokens
 
@@ -187,8 +191,8 @@ working directory and invoke the CLI in that directory. The CLI checks for
 
 Alternatively, use shell aliases with different `-c` paths. For example:
 
-    echo "alias swo1='swo-cli -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
-    echo "alias swo2='swo-cli -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
+    echo "alias swo1='swo-cli logs -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
+    echo "alias swo2='swo-cli logs -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
 
 
 ### Build
@@ -200,7 +204,7 @@ Alternatively, use shell aliases with different `-c` paths. For example:
 
 1. Download repository: `$ git clone https://github.com/solarwinds/swo-cli.git`
 2. Build the binary: `$ go build .`
-3. Test: `$ ./swo-cli test search string`
+3. Test: `$ ./swo-cli logs test search string`
 
 ### Release
 
