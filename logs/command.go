@@ -45,7 +45,7 @@ func NewLogsCommand() *command {
 		fmt.Println("    Examples:")
 		fmt.Printf("    %s logs something\n", os.Args[0])
 		fmt.Printf("    %s logs 1.2.3 Failure\n", os.Args[0])
-		fmt.Printf(`    %s logs -s ns1 "connection refused"\n`, os.Args[0])
+		fmt.Printf(`    %s logs -s ns1 "connection refused"%v`, os.Args[0], "\n")
 		fmt.Printf(`    %s logs "(www OR db) (nginx OR pgsql) -accepted"%v`, os.Args[0], "\n")
 		fmt.Printf(`    %s logs -g <SWO_GROUP_ID> --color all "(nginx OR pgsql) -accepted"%v`, os.Args[0], "\n")
 		fmt.Printf(`    %s logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>%v`, os.Args[0], "\n")
