@@ -1,4 +1,4 @@
-module github.com/jskiba/papertrail-cli-poc
+module github.com/solarwinds/swo-cli
 
 go 1.22.0
 
