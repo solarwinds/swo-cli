@@ -1,7 +1,7 @@
-# swo-cli command-line search client for SolarWinds Observability log management service
+# swo-cli command-line client for SolarWinds Observability platform
 
 Small standalone command line tool to retrieve and search recent app
-server metrics from [Solarwinds].
+server logs from [Solarwinds].
 
 ### This is v1 of the swo-cli and it supports ONLY logs search.
 ### This is v1 of the swo-cli and it DOES NOT support tailing.
