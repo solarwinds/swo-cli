@@ -125,7 +125,7 @@ api-url: https://api.solarwinds.com
 				Token:      "tokenFromEnvVar",
 			},
 			action: func() {
-				err := os.Setenv("SWOKEN", "tokenFromEnvVar")
+				err := os.Setenv("SWO_API_TOKEN", "tokenFromEnvVar")
 				require.NoError(t, err)
 			},
 		},
@@ -201,7 +201,7 @@ api-url: https://api.solarwinds.com
 			require.Equal(t, &tc.expected, cmd.opts)
 		})
 
-		os.Setenv("SWOKEN", "")
+		os.Setenv("SWO_API_TOKEN", "")
 	}
 }
 

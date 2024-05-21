@@ -25,10 +25,10 @@ Install [Go]
 
 Retrieve the full-access token from SolarWinds Observability.
 
-The API token can also be passed in the `SWOKEN`
+The API token can also be passed in the `SWO_API_TOKEN`
 environment variable instead of a configuration file. Example:
 
-    $ export SWOKEN='123456789012345678901234567890ab'
+    $ export SWO_API_TOKEN='123456789012345678901234567890ab'
     $ swo-cli logs
 
 

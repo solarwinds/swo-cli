@@ -123,7 +123,7 @@ func (opts *Options) Init(args []string) (*Options, error) {
 		}
 	}
 
-	if token := os.Getenv("SWOKEN"); token != "" {
+	if token := os.Getenv("SWO_API_TOKEN"); token != "" {
 		opts.Token = token
 	}
 
