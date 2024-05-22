@@ -60,7 +60,9 @@ func (c *Client) prepareRequest(ctx context.Context) (*http.Request, error) {
 	}
 
 	params := url.Values{}
-	params.Add("pageSize", strconv.Itoa(c.opts.count))
+	if c.opts.count != 0 {
+		params.Add("pageSize", strconv.Itoa(int(c.opts.count)))
+	}
 	if c.opts.group != "" {
 		params.Add("group", c.opts.group)
 	}

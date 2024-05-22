@@ -31,7 +31,6 @@ func TestNewOptions(t *testing.T) {
 			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				ApiUrl:     defaultApiUrl,
 				Token:      "123456",
 				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
@@ -79,7 +78,6 @@ func TestNewOptions(t *testing.T) {
 			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
 				ApiUrl:     "https://api.solarwinds.com",
 				Token:      "123456",
@@ -97,7 +95,6 @@ api-url: https://api.solarwinds.com
 			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
 				ApiUrl:     defaultApiUrl,
 				Token:      "123456",
@@ -112,7 +109,6 @@ api-url: https://api.solarwinds.com
 			flags: []string{},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				configFile: defaultConfigFile,
 				ApiUrl:     defaultApiUrl,
 				Token:      "tokenFromEnvVar",
@@ -127,7 +123,6 @@ api-url: https://api.solarwinds.com
 			flags: []string{},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				configFile: defaultConfigFile,
 				ApiUrl:     defaultApiUrl,
 			},
@@ -138,7 +133,6 @@ api-url: https://api.solarwinds.com
 			flags: []string{"--min-time", "5 seconds ago", "--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
 				ApiUrl:     defaultApiUrl,
 				minTime:    "2000-01-01T10:00:25Z",
@@ -155,7 +149,6 @@ api-url: https://api.solarwinds.com
 			flags: []string{"--max-time", "in 5 seconds", "--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
 			expected: Options{
 				args:       []string{},
-				count:      defaultCount,
 				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
 				ApiUrl:     defaultApiUrl,
 				maxTime:    "2000-01-01T10:00:35Z",

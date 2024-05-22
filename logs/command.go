@@ -51,7 +51,7 @@ func NewLogsCommand() *command {
 		fmt.Printf("    %s logs -- -redis\n", os.Args[0])
 	}
 
-	cmd.fs.IntVar(&cmd.opts.count, "count", defaultCount, "")
+	cmd.fs.UintVar(&cmd.opts.count, "count", 0, "")
 	cmd.fs.StringVar(&cmd.opts.configFile, "c", "", "")
 	cmd.fs.StringVar(&cmd.opts.configFile, "configfile", defaultConfigFile, "")
 	cmd.fs.StringVar(&cmd.opts.group, "g", "", "")
