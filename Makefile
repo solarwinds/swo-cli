@@ -9,7 +9,7 @@ endif
 install-golangci-lint:
 	$(call print-target)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh >lint-install.sh
-	mkdir $(WORKSPACE)/bin
+	mkdir -p $(WORKSPACE)/bin
 	chmod u+x ./lint-install.sh && ./lint-install.sh -b $(WORKSPACE)/bin $(golangci-lint-version)
 	$(RM) ./lint-install.sh
 
