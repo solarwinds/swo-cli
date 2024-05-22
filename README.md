@@ -10,10 +10,6 @@ Supports optional Boolean search queries. Example:
 
     $ swo-cli logs "(www OR db) (nginx OR pgsql) -accepted"
 
-Output is line-buffered so it can be fed into a pipe, like for grep.
-ANSI color codes are rendered in color on suitable terminals; see below for
-additional colorization options.
-
 ## Quick Start
 
 Install [Go]
@@ -58,19 +54,18 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
         -g, --group GROUP_ID                                                     Group ID to search
         -s,  --system SYSTEM                                                       System to search
         -j,           --json                                             Output raw JSON data (off)
-            --color [program|system|all|off]
         -V,        --version                                           Display the version and exit
 
         Usage:
           swo-cli logs [--min-time time] [--max-time time] [-g group-id] [-s system]
-            [-c swo-cli.yml] [-j] [--color attributes] [--] [query]
+            [-c swo-cli.yml] [-j] [--] [query]
 
         Examples:
         ./swo-cli logs something
         ./swo-cli logs 1.2.3 Failure
         ./swo-cli logs -s ns1 "connection refused"
         ./swo-cli logs "(www OR db) (nginx OR pgsql) -accepted"
-        ./swo-cli logs -g <SWO_GROUP_ID> --color all "(nginx OR pgsql) -accepted"
+        ./swo-cli logs -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"
         ./swo-cli logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
         ./swo-cli logs -- -redis
 
@@ -104,12 +99,6 @@ For sum, mean, and statistics, see
 
 ANSI color codes are retained, so log messages which are already colorized
 will automatically render in color on ANSI-capable terminals.
-
-By default, the CLI will colorize the non-body portion of each log message
-based on the value of the program attribute. 5 colors are available, so colors
-may not be unique. When the sending system name is more important than the
-program, use `--color=system` to colorize based on its value. Use `--color=all`
-to colorize based on both together.
 
 For content-based colorization, pipe through [lnav]. Install `lnav` from your
 preferred package repository, such as `brew install lnav` or

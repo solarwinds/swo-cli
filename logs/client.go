@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,19 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/solarwinds/swo-cli/version"
 )
-
-type ColorStrFunc func(format string, a ...interface{}) string
-
-var colors = []ColorStrFunc{
-	color.CyanString,
-	color.YellowString,
-	color.GreenString,
-	color.MagentaString,
-	color.RedString,
-}
 
 type Client struct {
 	opts       *Options
@@ -122,34 +110,9 @@ func (c *Client) printResult(logs *LogsData) error {
 		return err
 	}
 
-	hostnameColorIdx := -1
-	programColorIdx := -1
-	switch c.opts.color {
-	case system:
-		hostnameColorIdx = rand.IntN(len(colors))
-	case program:
-		programColorIdx = rand.IntN(len(colors))
-	case all:
-		programColorIdx = rand.IntN(len(colors))
-		hostnameColorIdx = rand.IntN(len(colors))
-		for hostnameColorIdx == programColorIdx {
-			hostnameColorIdx = rand.IntN(len(colors))
-		}
-	default:
-	}
-
 	for i := len(logs.Logs) - 1; i >= 0; i-- {
 		l := logs.Logs[i]
-		hostname := l.Hostname
-		program := l.Program
-		if hostnameColorIdx != -1 {
-			hostname = colors[hostnameColorIdx](hostname)
-		}
-		if programColorIdx != -1 {
-			program = colors[programColorIdx](program)
-		}
-
-		fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), hostname, program, l.Message)
+		fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
 	}
 
 	return nil

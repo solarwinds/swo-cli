@@ -14,11 +14,6 @@ import (
 )
 
 const (
-	program = "program"
-	system  = "system"
-	all     = "all"
-	off     = "off"
-
 	defaultCount      = 100
 	defaultConfigFile = "~/.swo-cli.yaml"
 	defaultApiUrl     = "https://api.na-01.cloud.solarwinds.com"
@@ -27,7 +22,6 @@ const (
 var (
 	now = time.Now()
 
-	errColorFlag    = errors.New("unknown value of the color flag")
 	errMinTimeFlag  = errors.New("failed to parse --min-time flag")
 	errMaxTimeFlag  = errors.New("failed to parse --max-time flag")
 	errMissingToken = errors.New("failed to find token")
@@ -63,7 +57,6 @@ type Options struct {
 	system     string
 	maxTime    string
 	minTime    string
-	color      string
 	json       bool
 	version    bool
 
@@ -73,12 +66,6 @@ type Options struct {
 
 func (opts *Options) Init(args []string) (*Options, error) {
 	opts.args = args
-
-	if opts.color != "" {
-		if !(opts.color == program || opts.color == system || opts.color == all || opts.color == off) {
-			return nil, errColorFlag
-		}
-	}
 
 	if opts.minTime != "" {
 		result, err := parseTime(opts.minTime)

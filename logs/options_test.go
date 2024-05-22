@@ -43,13 +43,12 @@ func TestNewOptions(t *testing.T) {
 		},
 		{
 			name:  "many flags",
-			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml"), "--count", "5", "--group", "groupValue", "--system", "systemValue", "--color", "program"},
+			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml"), "--count", "5", "--group", "groupValue", "--system", "systemValue"},
 			expected: Options{
 				args:       []string{},
 				count:      5,
 				group:      "groupValue",
 				system:     "systemValue",
-				color:      program,
 				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
 				ApiUrl:     defaultApiUrl,
 				Token:      "123456",
@@ -74,12 +73,6 @@ func TestNewOptions(t *testing.T) {
 				yamlStr := "token: 123456"
 				createConfigFile(t, configFile, yamlStr)
 			},
-		},
-		{
-			name:          "invalid color value",
-			flags:         []string{"--color", "yellow"},
-			expected:      Options{},
-			expectedError: errColorFlag,
 		},
 		{
 			name:  "read full config file",
