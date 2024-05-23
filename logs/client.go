@@ -90,7 +90,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 
 	var filter string
 	if c.opts.system != "" {
-		filter = fmt.Sprintf("host:%s", c.opts.system)
+		filter = fmt.Sprintf(`host:"%s"`, c.opts.system)
 	}
 	if len(c.opts.args) != 0 {
 		if len(filter) == 0 {

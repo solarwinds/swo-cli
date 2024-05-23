@@ -94,7 +94,7 @@ func TestPrepareRequest(t *testing.T) {
 			name:  "system flag",
 			flags: []string{"--configfile", configFile, "--system", "systemValue"},
 			expectedValues: map[string][]string{
-				"filter": {"host:systemValue"},
+				"filter": {`host:"systemValue"`},
 			},
 		},
 		{
@@ -102,7 +102,7 @@ func TestPrepareRequest(t *testing.T) {
 			flags: []string{"--configfile", configFile, "--system", "systemValue", "--", "\"access denied\"", "1.2.3.4", "-sshd"},
 			expectedValues: map[string][]string{
 				"filter": func() []string {
-					escaped := url.PathEscape("filter=host:systemValue \"access denied\" 1.2.3.4 -sshd")
+					escaped := url.PathEscape("filter=host:\"systemValue\" \"access denied\" 1.2.3.4 -sshd")
 					values, err := url.ParseQuery(escaped)
 					require.NoError(t, err)
 					value, ok := values["filter"]
