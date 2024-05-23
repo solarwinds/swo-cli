@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -48,8 +47,28 @@ func NewClient(opts *Options) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) prepareRequest(ctx context.Context) (*http.Request, error) {
-	logsEndpoint, err := url.JoinPath(c.opts.ApiUrl, "v1/logs")
+func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Request, error) {
+	var logsEndpoint string
+	var err error
+	params := url.Values{}
+	if nextPage == "" {
+		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, "v1/logs")
+	} else {
+		u, err := url.Parse(nextPage)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse nextPage field: %w", err)
+		}
+
+		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, u.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		params, err = url.ParseQuery(u.RawQuery)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +78,6 @@ func (c *Client) prepareRequest(ctx context.Context) (*http.Request, error) {
 		return nil, err
 	}
 
-	params := url.Values{}
-	if c.opts.count != 0 {
-		params.Add("pageSize", strconv.Itoa(int(c.opts.count)))
-	}
 	if c.opts.group != "" {
 		params.Add("group", c.opts.group)
 	}
@@ -101,7 +116,7 @@ func (c *Client) prepareRequest(ctx context.Context) (*http.Request, error) {
 	return request, nil
 }
 
-func (c *Client) printResult(logs *LogsData) error {
+func (c *Client) printResult(logs []Log) error {
 	if c.opts.json {
 		jsonFormat, err := json.Marshal(logs)
 		if err != nil {
@@ -112,8 +127,8 @@ func (c *Client) printResult(logs *LogsData) error {
 		return err
 	}
 
-	for i := len(logs.Logs) - 1; i >= 0; i-- {
-		l := logs.Logs[i]
+	for i := len(logs) - 1; i >= 0; i-- {
+		l := logs[i]
 		fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
 	}
 
@@ -126,40 +141,59 @@ func (c *Client) Run(ctx context.Context) error {
 		return nil
 	}
 
-	request, err := c.prepareRequest(ctx)
-	if err != nil {
-		return fmt.Errorf("error while preparing http request to SWO: %w", err)
-	}
+	var logsCount int
+	var allLogs []Log
+	var nextPage string
 
-	response, err := c.httpClient.Do(request)
-	if err != nil {
-		return fmt.Errorf("error while sending http request to SWO: %w", err)
-	}
-	defer func() {
-		err := response.Body.Close()
+	for logsCount < int(c.opts.count) {
+		request, err := c.prepareRequest(ctx, nextPage)
 		if err != nil {
-			slog.Error("Could not close https body", "error", err)
+			return fmt.Errorf("error while preparing http request to SWO: %w", err)
 		}
-	}()
 
-	content, err := io.ReadAll(response.Body)
-	if err != nil {
-		return fmt.Errorf("error while reading http response body from SWO: %w", err)
+		response, err := c.httpClient.Do(request)
+		if err != nil {
+			return fmt.Errorf("error while sending http request to SWO: %w", err)
+		}
+		defer func() {
+			err := response.Body.Close()
+			if err != nil {
+				slog.Error("Could not close https body", "error", err)
+			}
+		}()
+
+		content, err := io.ReadAll(response.Body)
+		if err != nil {
+			return fmt.Errorf("error while reading http response body from SWO: %w", err)
+		}
+
+		if !(response.StatusCode >= 200 && response.StatusCode < 300) {
+			return fmt.Errorf("received %d status code, response body: %s", response.StatusCode, string(content))
+		}
+
+		if len(content) == 0 {
+			return nil
+		}
+
+		var logs LogsData
+		err = json.Unmarshal(content, &logs)
+		if err != nil {
+			return fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)
+		}
+
+		lastIdx := len(logs.Logs)
+		if logsCount+len(logs.Logs) > int(c.opts.count) {
+			lastIdx = int(c.opts.count) - logsCount
+		}
+		allLogs = append(allLogs, logs.Logs[:lastIdx]...)
+		logsCount += len(logs.Logs)
+
+		if logs.NextPage == "" {
+			break
+		}
+
+		nextPage = logs.NextPage
 	}
 
-	if !(response.StatusCode >= 200 && response.StatusCode < 300) {
-		return fmt.Errorf("received %d status code, response body: %s", response.StatusCode, string(content))
-	}
-
-	if len(content) == 0 {
-		return nil
-	}
-
-	var logs LogsData
-	err = json.Unmarshal(content, &logs)
-	if err != nil {
-		return fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)
-	}
-
-	return c.printResult(&logs)
+	return c.printResult(allLogs)
 }

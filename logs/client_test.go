@@ -77,15 +77,14 @@ func TestPrepareRequest(t *testing.T) {
 		expectedError  error
 	}{
 		{
-			name:  "default request",
-			flags: []string{"--configfile", configFile},
+			name:           "default request",
+			flags:          []string{"--configfile", configFile},
 			expectedValues: map[string][]string{},
 		},
 		{
-			name:  "custom pageSize group startTime and endTime",
+			name:  "custom count group startTime and endTime",
 			flags: []string{"--configfile", configFile, "--count", "8", "--group", "groupValue", "--min-time", "10 seconds ago", "--max-time", "2 seconds ago"},
 			expectedValues: map[string][]string{
-				"pageSize":  {"8"},
 				"group":     {"groupValue"},
 				"startTime": {"2000-01-01T10:00:20Z"},
 				"endTime":   {"2000-01-01T10:00:28Z"},
@@ -95,7 +94,7 @@ func TestPrepareRequest(t *testing.T) {
 			name:  "system flag",
 			flags: []string{"--configfile", configFile, "--system", "systemValue"},
 			expectedValues: map[string][]string{
-				"filter":   {"host:systemValue"},
+				"filter": {"host:systemValue"},
 			},
 		},
 		{
@@ -120,7 +119,7 @@ func TestPrepareRequest(t *testing.T) {
 			err := cmd.Init(tc.flags)
 			require.NoError(t, err)
 
-			request, err := cmd.client.prepareRequest(context.Background())
+			request, err := cmd.client.prepareRequest(context.Background(), "")
 			require.NoError(t, err)
 
 			values := request.URL.Query()
@@ -161,13 +160,16 @@ func TestRun(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 
-	server := &http.Server{}
+	mux := http.NewServeMux()
+	server := &http.Server{
+		Handler: mux,
+	}
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
-		http.HandleFunc("/v1/logs", handler)
+		mux.HandleFunc("/v1/logs", handler)
 		err = server.Serve(listener)
 	}()
 
@@ -197,7 +199,7 @@ api-url: %s
 		output, err := io.ReadAll(r)
 		require.NoError(t, err)
 
-		data, err := json.Marshal(logsData)
+		data, err := json.Marshal(logsData.Logs)
 		require.NoError(t, err)
 		require.Equal(t, string(data), string(output[:len(output)-1])) // last char is a new line character
 	}()
@@ -212,6 +214,224 @@ api-url: %s
 
 	w.Close()
 
+	wg.Wait()
+}
+
+func TestPrintWithCustomCountAndPageSize(t *testing.T) {
+	logsData := map[string]LogsData{
+		"": {
+			Logs: []Log{
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 8, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 7, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+			},
+			PageInfo: PageInfo{
+				NextPage: "/v1/logs?skipToken=1",
+			},
+		},
+		"1": {
+			Logs: []Log{
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 6, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 5, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+			},
+			PageInfo: PageInfo{
+				NextPage: "/v1/logs?skipToken=2",
+			},
+		},
+		"2": {
+			Logs: []Log{
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 4, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 3, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+			},
+			PageInfo: PageInfo{
+				NextPage: "/v1/logs?skipToken=3",
+			},
+		},
+		"3": {
+			Logs: []Log{
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 2, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+				{
+					Time:     time.Date(2000, 1, 1, 1, 1, 1, 0, time.UTC),
+					Message:  "msg1",
+					Hostname: "h1",
+					Severity: "info",
+					Program:  "p1",
+				},
+			},
+		},
+	}
+
+	testCases := []struct {
+		name           string
+		expectedOutput []Log
+		count          string
+	}{
+		{
+			name: "count 3 pageSize 2",
+			expectedOutput: []Log{
+				logsData[""].Logs[0],
+				logsData[""].Logs[1],
+				logsData["1"].Logs[0],
+			},
+			count: "3",
+		},
+		{
+			name: "count 1 pageSize 2",
+			expectedOutput: []Log{
+				logsData[""].Logs[0],
+			},
+			count: "1",
+		},
+		{
+			name: "count 2 pageSize 2",
+			expectedOutput: []Log{
+				logsData[""].Logs[0],
+				logsData[""].Logs[1],
+			},
+			count: "2",
+		},
+		{
+			name: "count 1000 pageSize 2",
+			expectedOutput: []Log{
+				logsData[""].Logs[0],
+				logsData[""].Logs[1],
+				logsData["1"].Logs[0],
+				logsData["1"].Logs[1],
+				logsData["2"].Logs[0],
+				logsData["2"].Logs[1],
+				logsData["3"].Logs[0],
+				logsData["3"].Logs[1],
+			},
+			count: "1000",
+		},
+	}
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		values := r.URL.Query()
+
+		var skipToken string
+		queryValues, ok := values["skipToken"]
+		if ok {
+			skipToken = queryValues[0]
+		} else {
+			skipToken = ""
+		}
+
+		data, err := json.Marshal(logsData[skipToken])
+		require.NoError(t, err)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		_, err = w.Write(data)
+		require.NoError(t, err)
+	}
+
+	wg := sync.WaitGroup{}
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	mux := http.NewServeMux()
+	server := &http.Server{
+		Handler: mux,
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		mux.HandleFunc("/v1/logs", handler)
+		err = server.Serve(listener)
+	}()
+
+	token := "1234567"
+	yamlStr := fmt.Sprintf(`
+token: %s
+api-url: %s
+`, token, fmt.Sprintf("http://%s", listener.Addr().String()))
+	createConfigFile(t, configFile, yamlStr)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var wgLocal sync.WaitGroup
+
+			location, err := time.LoadLocation("GMT")
+			require.NoError(t, err)
+
+			time.Local = location
+
+			r, w, err := os.Pipe()
+			require.NoError(t, err)
+
+			cmd := NewLogsCommand()
+			err = cmd.Init([]string{"--configfile", configFile, "--json", "--count", tc.count})
+			require.NoError(t, err)
+
+			cmd.client.output = w
+
+			wgLocal.Add(1)
+			go func() {
+				defer wgLocal.Done()
+
+				output, err := io.ReadAll(r)
+				require.NoError(t, err)
+
+				data, err := json.Marshal(tc.expectedOutput)
+				require.NoError(t, err)
+				require.Equal(t, string(data), string(output[:len(output)-1])) // last char is a new line character
+			}()
+
+			err = cmd.client.Run(context.Background())
+
+			require.NoError(t, err)
+
+			w.Close()
+			wgLocal.Wait()
+		})
+	}
+
+	_ = server.Shutdown(context.Background())
 	wg.Wait()
 }
 
@@ -244,7 +464,7 @@ func TestPrintResultStandard(t *testing.T) {
 		require.Equal(t, expectStr, string(output))
 	}()
 
-	err = cmd.client.printResult(&logsData)
+	err = cmd.client.printResult(logsData.Logs)
 	require.NoError(t, err)
 
 	err = w.Close()
@@ -277,28 +497,22 @@ func TestPrintResultJSON(t *testing.T) {
 		require.NoError(t, err)
 
 		expectedStr := `
-		{
-			"logs":[
-				{
-					"time":"%s",
-					"message":"messageOne",
-					"hostname":"hostnameOne",
-					"severity":"severityOne",
-					"program":"programOne"
-				},
-				{
-					"time":"%s",
-					"message":"messageTwo",
-					"hostname":"hostnameTwo",
-					"severity":"severityTwo",
-					"program":"programTwo"
-				}
-			],
-			"pageInfo":{
-				"prevPage":"prevPageValue",
-				"nextPage":""
+		[
+			{
+				"time":"%s",
+				"message":"messageOne",
+				"hostname":"hostnameOne",
+				"severity":"severityOne",
+				"program":"programOne"
+			},
+			{
+				"time":"%s",
+				"message":"messageTwo",
+				"hostname":"hostnameTwo",
+				"severity":"severityTwo",
+				"program":"programTwo"
 			}
-		}
+		]
 		`
 		trimmed := strings.TrimSpace(fmt.Sprintf(expectedStr, logsData.Logs[0].Time.Format(time.RFC3339Nano), logsData.Logs[1].Time.Format(time.RFC3339Nano)))
 		trimmed = strings.ReplaceAll(trimmed, "\t", "")
@@ -306,7 +520,7 @@ func TestPrintResultJSON(t *testing.T) {
 		require.Equal(t, trimmed, string(output[:len(output)-1])) // last char is a new line character
 	}()
 
-	err = cmd.client.printResult(&logsData)
+	err = cmd.client.printResult(logsData.Logs)
 	require.NoError(t, err)
 
 	err = w.Close()
