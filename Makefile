@@ -9,6 +9,6 @@ install-golangci-lint:
 
 .PHONY: ci-lint
 ci-lint: install-golangci-lint
-	GOOS=linux "bin/golangci-lint" run --timeout 2m
-	GOOS=windows "bin/golangci-lint" run --timeout 2m
-	GOOS=darwin "bin/golangci-lint" run --timeout 2m
+	GOOS=linux bin/golangci-lint run --timeout 2m
+	GOOS=windows bin/golangci-lint run --timeout 2m
+	GOOS=darwin bin/golangci-lint run --timeout 2m
