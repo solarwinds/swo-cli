@@ -185,6 +185,9 @@ func (c *Client) Run(ctx context.Context) error {
 		lastIdx := len(logs.Logs)
 		if logsCount+len(logs.Logs) > int(c.opts.count) {
 			lastIdx = int(c.opts.count) - logsCount
+			if lastIdx > len(logs.Logs) {
+				lastIdx = len(logs.Logs)
+			}
 		}
 		allLogs = append(allLogs, logs.Logs[:lastIdx]...)
 		logsCount += len(logs.Logs)
