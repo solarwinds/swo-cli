@@ -53,6 +53,32 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	params := url.Values{}
 	if nextPage == "" {
 		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, "v1/logs")
+
+		if c.opts.group != "" {
+			params.Add("group", c.opts.group)
+		}
+		if c.opts.minTime != "" {
+			params.Add("startTime", c.opts.minTime)
+		}
+		if c.opts.maxTime != "" {
+			params.Add("endTime", c.opts.maxTime)
+		}
+
+		var filter string
+		if c.opts.system != "" {
+			filter = fmt.Sprintf(`host:"%s"`, c.opts.system)
+		}
+		if len(c.opts.args) != 0 {
+			if len(filter) == 0 {
+				filter = strings.Join(c.opts.args, " ")
+			} else {
+				filter = filter + " " + strings.Join(c.opts.args, " ")
+			}
+		}
+
+		if filter != "" {
+			params.Add("filter", filter)
+		}
 	} else {
 		u, err := url.Parse(nextPage)
 		if err != nil {
@@ -69,6 +95,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 			return nil, err
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -76,32 +103,6 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	logsUrl, err := url.Parse(logsEndpoint)
 	if err != nil {
 		return nil, err
-	}
-
-	if c.opts.group != "" {
-		params.Add("group", c.opts.group)
-	}
-	if c.opts.minTime != "" {
-		params.Add("startTime", c.opts.minTime)
-	}
-	if c.opts.maxTime != "" {
-		params.Add("endTime", c.opts.maxTime)
-	}
-
-	var filter string
-	if c.opts.system != "" {
-		filter = fmt.Sprintf(`host:"%s"`, c.opts.system)
-	}
-	if len(c.opts.args) != 0 {
-		if len(filter) == 0 {
-			filter = strings.Join(c.opts.args, " ")
-		} else {
-			filter = filter + " " + strings.Join(c.opts.args, " ")
-		}
-	}
-
-	if filter != "" {
-		params.Add("filter", filter)
 	}
 
 	logsUrl.RawQuery = params.Encode()
