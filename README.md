@@ -41,8 +41,8 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
 
 ## Usage & Examples
 
-    $ swo --help
-    Usage: ./swo-cli <command> [options]
+    $ swo-cli --help
+    Usage: swo-cli <command> [options]
 
     Commands:
       logs - command-line search for SolarWinds Observability log management service
@@ -60,13 +60,13 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
             [-c swo-cli.yml] [-j] [--] [query]
 
         Examples:
-        ./swo-cli logs something
-        ./swo-cli logs 1.2.3 Failure
-        ./swo-cli logs -s ns1 "connection refused"
-        ./swo-cli logs "(www OR db) (nginx OR pgsql) -accepted"
-        ./swo-cli logs -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"
-        ./swo-cli logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
-        ./swo-cli logs -- -redis
+        swo-cli logs something
+        swo-cli logs 1.2.3 Failure
+        swo-cli logs -s ns1 "connection refused"
+        swo-cli logs "(www OR db) (nginx OR pgsql) -accepted"
+        swo-cli logs -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"
+        swo-cli logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
+        swo-cli logs -- -redis
 
 
 ### Count, pivot, and summarize
