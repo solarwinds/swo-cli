@@ -53,7 +53,6 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	params := url.Values{}
 	if nextPage == "" {
 		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, "v1/logs")
-		params.Add("direction", "forward")
 		params.Add("pageSize", "1000")
 
 		if c.opts.group != "" {
