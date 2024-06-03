@@ -47,7 +47,6 @@ Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` ->
     Commands:
       logs - command-line search for SolarWinds Observability log management service
         -h,           --help                                                             Show usage
-              --count NUMBER                                  Number of log entries to search (100)
               --min-time MIN                                           Earliest time to search from
               --max-time MAX                                             Latest time to search from
         -c,     --configfile                                       Path to config (~/.swo-cli.yaml)

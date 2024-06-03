@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	defaultCount      = 100
 	defaultConfigFile = "~/.swo-cli.yml"
 	defaultApiUrl     = "https://api.na-01.cloud.solarwinds.com"
 )
@@ -51,7 +50,6 @@ var (
 
 type Options struct {
 	args       []string
-	count      uint
 	configFile string
 	group      string
 	system     string

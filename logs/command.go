@@ -24,7 +24,6 @@ func NewLogsCommand() *command {
 	cmd.fs.Usage = func() {
 		fmt.Printf("  %36s\n", "logs - command-line search for SolarWinds Observability log management service")
 		fmt.Printf("    %2s, %16s %70s\n", "-h", "--help", "Show usage")
-		fmt.Printf("    %2s  %16s %70s\n", "", "--count NUMBER", "Number of log entries to search (100)")
 		fmt.Printf("    %2s  %16s %70s\n", "", "--min-time MIN", "Earliest time to search from")
 		fmt.Printf("    %2s  %16s %70s\n", "", "--max-time MAX", "Latest time to search from")
 		fmt.Printf("    %2s, %16s %70s\n", "-c", "--configfile", "Path to config (~/.swo-cli.yaml)")
@@ -51,7 +50,6 @@ func NewLogsCommand() *command {
 		fmt.Printf("    %s logs -- -redis\n", os.Args[0])
 	}
 
-	cmd.fs.UintVar(&cmd.opts.count, "count", defaultCount, "")
 	cmd.fs.StringVar(&cmd.opts.configFile, "c", "", "")
 	cmd.fs.StringVar(&cmd.opts.configFile, "configfile", defaultConfigFile, "")
 	cmd.fs.StringVar(&cmd.opts.group, "g", "", "")

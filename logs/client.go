@@ -53,6 +53,8 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	params := url.Values{}
 	if nextPage == "" {
 		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, "v1/logs")
+		params.Add("direction", "forward")
+		params.Add("pageSize", "1000")
 
 		if c.opts.group != "" {
 			params.Add("group", c.opts.group)
@@ -128,8 +130,7 @@ func (c *Client) printResult(logs []Log) error {
 		return err
 	}
 
-	for i := len(logs) - 1; i >= 0; i-- {
-		l := logs[i]
+	for _, l := range logs {
 		fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
 	}
 
@@ -142,11 +143,9 @@ func (c *Client) Run(ctx context.Context) error {
 		return nil
 	}
 
-	var logsCount int
-	var allLogs []Log
 	var nextPage string
 
-	for logsCount < int(c.opts.count) {
+	for {
 		request, err := c.prepareRequest(ctx, nextPage)
 		if err != nil {
 			return fmt.Errorf("error while preparing http request to SWO: %w", err)
@@ -182,15 +181,10 @@ func (c *Client) Run(ctx context.Context) error {
 			return fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)
 		}
 
-		lastIdx := len(logs.Logs)
-		if logsCount+len(logs.Logs) > int(c.opts.count) {
-			lastIdx = int(c.opts.count) - logsCount
-			if lastIdx > len(logs.Logs) {
-				lastIdx = len(logs.Logs)
-			}
+		err = c.printResult(logs.Logs)
+		if err != nil {
+			return err
 		}
-		allLogs = append(allLogs, logs.Logs[:lastIdx]...)
-		logsCount += len(logs.Logs)
 
 		if logs.NextPage == "" {
 			break
@@ -199,5 +193,5 @@ func (c *Client) Run(ctx context.Context) error {
 		nextPage = logs.NextPage
 	}
 
-	return c.printResult(allLogs)
+	return nil
 }
