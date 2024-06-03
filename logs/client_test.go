@@ -189,23 +189,34 @@ api-url: %s
 
 	cmd.client.output = w
 
-	outputComapreDone := make(chan struct{})
+	outputCompareDone := make(chan struct{})
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer close(outputComapreDone)
+		defer close(outputCompareDone)
 
 		output, err := io.ReadAll(r)
 		require.NoError(t, err)
 
-		data, err := json.Marshal(logsData.Logs)
+
+		expectedOutput := ""
+		for i, l := range logsData.Logs {
+			data, err := json.Marshal(l)
+			require.NoError(t, err)
+
+			expectedOutput += string(data)
+			if i != len(logsData.Logs)-1 {
+				expectedOutput += "\n"
+			}
+		}
+
 		require.NoError(t, err)
-		require.Equal(t, string(data), string(output[:len(output)-1])) // last char is a new line character
+		require.Equal(t, expectedOutput, string(output[:len(output)-1])) // last char is a new line character
 	}()
 
 	go func() {
-		<-outputComapreDone
+		<-outputCompareDone
 		_ = server.Shutdown(context.Background())
 	}()
 
@@ -278,27 +289,11 @@ func TestPrintResultJSON(t *testing.T) {
 		output, err := io.ReadAll(r)
 		require.NoError(t, err)
 
-		expectedStr := `
-		[
-			{
-				"time":"%s",
-				"message":"messageOne",
-				"hostname":"hostnameOne",
-				"severity":"severityOne",
-				"program":"programOne"
-			},
-			{
-				"time":"%s",
-				"message":"messageTwo",
-				"hostname":"hostnameTwo",
-				"severity":"severityTwo",
-				"program":"programTwo"
-			}
-		]
+		expectedStr := `{"time":"%s","message":"messageOne","hostname":"hostnameOne","severity":"severityOne","program":"programOne"}
+						{"time":"%s","message":"messageTwo","hostname":"hostnameTwo","severity":"severityTwo","program":"programTwo"}
 		`
 		trimmed := strings.TrimSpace(fmt.Sprintf(expectedStr, logsData.Logs[0].Time.Format(time.RFC3339Nano), logsData.Logs[1].Time.Format(time.RFC3339Nano)))
 		trimmed = strings.ReplaceAll(trimmed, "\t", "")
-		trimmed = strings.ReplaceAll(trimmed, "\n", "")
 		require.Equal(t, trimmed, string(output[:len(output)-1])) // last char is a new line character
 	}()
 

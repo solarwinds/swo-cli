@@ -120,18 +120,17 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 }
 
 func (c *Client) printResult(logs []Log) error {
-	if c.opts.json {
-		jsonFormat, err := json.Marshal(logs)
-		if err != nil {
-			return err
-		}
-
-		_, err = fmt.Fprintln(c.output, string(jsonFormat))
-		return err
-	}
-
 	for _, l := range logs {
-		fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
+		if c.opts.json {
+			log, err := json.Marshal(l)
+			if err != nil {
+				return err
+			}
+			
+			fmt.Fprintln(c.output, string(log))
+		} else {
+			fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
+		}
 	}
 
 	return nil
@@ -172,7 +171,7 @@ func (c *Client) Run(ctx context.Context) error {
 		}
 
 		if len(content) == 0 {
-			return nil
+			return fmt.Errorf("returned content is empty")
 		}
 
 		var logs LogsData
@@ -183,7 +182,7 @@ func (c *Client) Run(ctx context.Context) error {
 
 		err = c.printResult(logs.Logs)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to print result: %w", err)
 		}
 
 		if logs.NextPage == "" {
