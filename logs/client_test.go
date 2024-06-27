@@ -15,7 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/solarwinds/swo-cli/version"
 	"github.com/stretchr/testify/require"
 )
 
@@ -72,18 +71,23 @@ func TestPrepareRequest(t *testing.T) {
 
 	testCases := []struct {
 		name           string
-		flags          []string
+		options        *Options
 		expectedValues map[string][]string
 		expectedError  error
 	}{
 		{
 			name:           "default request",
-			flags:          []string{"--configfile", configFile},
+			options:        &Options{configFile: configFile, ApiUrl: DefaultApiUrl},
 			expectedValues: map[string][]string{},
 		},
 		{
-			name:  "custom count group startTime and endTime",
-			flags: []string{"--configfile", configFile, "--group", "groupValue", "--min-time", "10 seconds ago", "--max-time", "2 seconds ago"},
+			name: "custom count group startTime and endTime",
+			options: &Options{
+				configFile: configFile,
+				group:      "groupValue",
+				minTime:    "10 seconds ago",
+				maxTime:    "2 seconds ago",
+			},
 			expectedValues: map[string][]string{
 				"group":     {"groupValue"},
 				"startTime": {"2000-01-01T10:00:20Z"},
@@ -91,15 +95,19 @@ func TestPrepareRequest(t *testing.T) {
 			},
 		},
 		{
-			name:  "system flag",
-			flags: []string{"--configfile", configFile, "--system", "systemValue"},
+			name:    "system flag",
+			options: &Options{configFile: configFile, system: "systemValue"},
 			expectedValues: map[string][]string{
 				"filter": {`host:"systemValue"`},
 			},
 		},
 		{
-			name:  "system flag with filter",
-			flags: []string{"--configfile", configFile, "--system", "systemValue", "--", "\"access denied\"", "1.2.3.4", "-sshd"},
+			name: "system flag with filter",
+			options: &Options{
+				args:       []string{`"access denied"`, "1.2.3.4", "-sshd"},
+				configFile: configFile,
+				system:     "systemValue",
+			},
 			expectedValues: map[string][]string{
 				"filter": func() []string {
 					escaped := url.PathEscape("filter=host:\"systemValue\" \"access denied\" 1.2.3.4 -sshd")
@@ -115,11 +123,11 @@ func TestPrepareRequest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cmd := NewLogsCommand()
-			err := cmd.Init(tc.flags)
+			require.NoError(t, err)
+			client, err := NewClient(tc.options)
 			require.NoError(t, err)
 
-			request, err := cmd.client.prepareRequest(context.Background(), "")
+			request, err := client.prepareRequest(context.Background(), "")
 			require.NoError(t, err)
 
 			values := request.URL.Query()
@@ -183,11 +191,13 @@ api-url: %s
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
 
-	cmd := NewLogsCommand()
-	err = cmd.Init([]string{"--configfile", configFile, "--json"})
+	client, err := NewClient(&Options{
+		configFile: configFile,
+		json:       true,
+	})
 	require.NoError(t, err)
 
-	cmd.client.output = w
+	client.output = w
 
 	outputCompareDone := make(chan struct{})
 
@@ -198,7 +208,6 @@ api-url: %s
 
 		output, err := io.ReadAll(r)
 		require.NoError(t, err)
-
 
 		expectedOutput := ""
 		for i, l := range logsData.Logs {
@@ -220,10 +229,11 @@ api-url: %s
 		_ = server.Shutdown(context.Background())
 	}()
 
-	err = cmd.client.Run(context.Background())
+	err = client.Run(context.Background())
 	require.NoError(t, err)
 
-	w.Close()
+	err = w.Close()
+	require.NoError(t, err)
 
 	wg.Wait()
 }
@@ -235,13 +245,12 @@ func TestPrintResultStandard(t *testing.T) {
 	time.Local = location
 
 	createConfigFile(t, configFile, "token: 1234567")
-	cmd := NewLogsCommand()
-	err = cmd.Init([]string{"--configfile", configFile})
+	client, err := NewClient(&Options{configFile: configFile})
 	require.NoError(t, err)
 
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
-	cmd.client.output = w
+	client.output = w
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -257,7 +266,7 @@ func TestPrintResultStandard(t *testing.T) {
 		require.Equal(t, expectStr, string(output))
 	}()
 
-	err = cmd.client.printResult(logsData.Logs)
+	err = client.printResult(logsData.Logs)
 	require.NoError(t, err)
 
 	err = w.Close()
@@ -273,13 +282,12 @@ func TestPrintResultJSON(t *testing.T) {
 	time.Local = location
 
 	createConfigFile(t, configFile, "token: 1234567")
-	cmd := NewLogsCommand()
-	err = cmd.Init([]string{"--configfile", configFile, "--json"})
+	client, err := NewClient(&Options{configFile: configFile, json: true})
 	require.NoError(t, err)
 
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
-	cmd.client.output = w
+	client.output = w
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -297,40 +305,11 @@ func TestPrintResultJSON(t *testing.T) {
 		require.Equal(t, trimmed, string(output[:len(output)-1])) // last char is a new line character
 	}()
 
-	err = cmd.client.printResult(logsData.Logs)
+	err = client.printResult(logsData.Logs)
 	require.NoError(t, err)
 
 	err = w.Close()
 	require.NoError(t, err)
-
-	wg.Wait()
-}
-
-func TestRunVersion(t *testing.T) {
-	createConfigFile(t, configFile, "token: 1234567")
-
-	cmd := NewLogsCommand()
-	err := cmd.Init([]string{"--configfile", configFile, "--version"})
-	require.NoError(t, err)
-
-	r, w, err := os.Pipe()
-	require.NoError(t, err)
-	cmd.client.output = w
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		output, err := io.ReadAll(r)
-		require.NoError(t, err)
-		require.Equal(t, version.Version+"\n", string(output))
-	}()
-
-	err = cmd.client.Run(context.Background())
-	require.NoError(t, err)
-
-	w.Close()
 
 	wg.Wait()
 }

@@ -3,7 +3,6 @@ package logs
 import (
 	"errors"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -21,62 +20,17 @@ func TestNewOptions(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		flags         []string
 		action        func()
+		opts          *Options
 		expected      Options
 		expectedError error
 	}{
 		{
-			name:  "default flag values",
-			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
+			name: "read full config file",
+			opts: &Options{configFile: configFile},
 			expected: Options{
 				args:       []string{},
-				ApiUrl:     defaultApiUrl,
-				Token:      "123456",
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
-			},
-			action: func() {
-				yamlStr := "token: 123456"
-				createConfigFile(t, configFile, yamlStr)
-			},
-		},
-		{
-			name:  "many flags",
-			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml"), "--group", "groupValue", "--system", "systemValue"},
-			expected: Options{
-				args:       []string{},
-				group:      "groupValue",
-				system:     "systemValue",
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
-				ApiUrl:     defaultApiUrl,
-				Token:      "123456",
-			},
-			action: func() {
-				yamlStr := "token: 123456"
-				createConfigFile(t, configFile, yamlStr)
-			},
-		},
-		{
-			name:  "many flags and args",
-			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml"), "--group", "groupValue", "one", "two", "three"},
-			expected: Options{
-				args:       []string{"one", "two", "three"},
-				group:      "groupValue",
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
-				ApiUrl:     defaultApiUrl,
-				Token:      "123456",
-			},
-			action: func() {
-				yamlStr := "token: 123456"
-				createConfigFile(t, configFile, yamlStr)
-			},
-		},
-		{
-			name:  "read full config file",
-			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
-			expected: Options{
-				args:       []string{},
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
+				configFile: configFile,
 				ApiUrl:     "https://api.solarwinds.com",
 				Token:      "123456",
 			},
@@ -89,12 +43,12 @@ api-url: https://api.solarwinds.com
 			},
 		},
 		{
-			name:  "read token from config file",
-			flags: []string{"--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
+			name: "read token from config file",
+			opts: &Options{configFile: configFile, ApiUrl: DefaultApiUrl},
 			expected: Options{
 				args:       []string{},
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
-				ApiUrl:     defaultApiUrl,
+				configFile: configFile,
+				ApiUrl:     DefaultApiUrl,
 				Token:      "123456",
 			},
 			action: func() {
@@ -103,12 +57,12 @@ api-url: https://api.solarwinds.com
 			},
 		},
 		{
-			name:  "read token from env var",
-			flags: []string{},
+			name: "read token from env var",
+			opts: &Options{configFile: DefaultConfigFile, ApiUrl: DefaultApiUrl},
 			expected: Options{
 				args:       []string{},
-				configFile: defaultConfigFile,
-				ApiUrl:     defaultApiUrl,
+				configFile: DefaultConfigFile,
+				ApiUrl:     DefaultApiUrl,
 				Token:      "tokenFromEnvVar",
 			},
 			action: func() {
@@ -117,22 +71,19 @@ api-url: https://api.solarwinds.com
 			},
 		},
 		{
-			name:  "missing token",
-			flags: []string{},
+			name: "missing token",
+			opts: &Options{},
 			expected: Options{
-				args:       []string{},
-				configFile: defaultConfigFile,
-				ApiUrl:     defaultApiUrl,
+				args: []string{},
 			},
 			expectedError: errMissingToken,
 		},
 		{
-			name:  "parse human readable min time",
-			flags: []string{"--min-time", "5 seconds ago", "--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
+			name: "parse human readable min time",
+			opts: &Options{configFile: configFile, minTime: "5 seconds ago"},
 			expected: Options{
 				args:       []string{},
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
-				ApiUrl:     defaultApiUrl,
+				configFile: configFile,
 				minTime:    "2000-01-01T10:00:25Z",
 				Token:      "123456",
 			},
@@ -143,12 +94,11 @@ api-url: https://api.solarwinds.com
 			},
 		},
 		{
-			name:  "parse human readable max time",
-			flags: []string{"--max-time", "in 5 seconds", "--configfile", filepath.Join(os.TempDir(), "config-file.yaml")},
+			name: "parse human readable max time",
+			opts: &Options{configFile: configFile, maxTime: "in 5 seconds"},
 			expected: Options{
 				args:       []string{},
-				configFile: filepath.Join(os.TempDir(), "config-file.yaml"),
-				ApiUrl:     defaultApiUrl,
+				configFile: configFile,
 				maxTime:    "2000-01-01T10:00:35Z",
 				Token:      "123456",
 			},
@@ -159,8 +109,8 @@ api-url: https://api.solarwinds.com
 			},
 		},
 		{
-			name:  "fail parsing min time",
-			flags: []string{"--min-time", "what?"},
+			name: "fail parsing min time",
+			opts: &Options{minTime: "what?"},
 			action: func() {
 				now = fixedTime
 			},
@@ -170,19 +120,18 @@ api-url: https://api.solarwinds.com
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_ = os.Remove(filepath.Join(os.TempDir(), "config-file.yaml"))
+			_ = os.Remove(configFile)
 			if tc.action != nil {
 				tc.action()
 			}
 
-			cmd := NewLogsCommand()
-			err := cmd.Init(tc.flags)
+			err := tc.opts.Init([]string{})
 			require.True(t, errors.Is(err, tc.expectedError), "error: %v, expected: %v", err, tc.expectedError)
 			if tc.expectedError != nil {
 				return
 			}
 
-			require.Equal(t, &tc.expected, cmd.opts)
+			require.Equal(t, &tc.expected, tc.opts)
 		})
 
 		os.Setenv("SWO_API_TOKEN", "")
