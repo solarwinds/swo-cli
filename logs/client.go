@@ -11,8 +11,11 @@ import (
 	"os"
 	"strings"
 	"time"
+)
 
-	"github.com/solarwinds/swo-cli/version"
+const (
+	DefaultConfigFile = "~/.swo-cli.yml"
+	DefaultApiUrl     = "https://api.na-01.cloud.solarwinds.com"
 )
 
 type Client struct {
@@ -126,7 +129,7 @@ func (c *Client) printResult(logs []Log) error {
 			if err != nil {
 				return err
 			}
-			
+
 			fmt.Fprintln(c.output, string(log))
 		} else {
 			fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
@@ -137,11 +140,6 @@ func (c *Client) printResult(logs []Log) error {
 }
 
 func (c *Client) Run(ctx context.Context) error {
-	if c.opts.version {
-		fmt.Fprintln(c.output, version.Version)
-		return nil
-	}
-
 	var nextPage string
 
 	for {

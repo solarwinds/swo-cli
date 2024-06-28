@@ -2,104 +2,60 @@ package logs
 
 import (
 	"context"
-	"flag"
-	"fmt"
-	"os"
+	"github.com/urfave/cli/v2"
 )
 
-const logsCommandName = "logs"
-
-type command struct {
-	fs     *flag.FlagSet
-	client *Client
-	opts   *Options
+var flags = []cli.Flag{
+	&cli.StringFlag{Name: "group", Aliases: []string{"g"}, Usage: "group ID to search"},
+	&cli.StringFlag{Name: "min-time", Usage: "earliest time to search from", Value: "1 hour ago"},
+	&cli.StringFlag{Name: "max-time", Usage: "latest time to search from"},
+	&cli.StringFlag{Name: "system", Aliases: []string{"s"}, Usage: "system to search"},
+	&cli.BoolFlag{Name: "json", Aliases: []string{"j"}, Usage: "output raw JSON", Value: false},
 }
 
-func NewLogsCommand() *command {
-	cmd := &command{
-		fs:   flag.NewFlagSet(logsCommandName, flag.ContinueOnError),
-		opts: &Options{},
+func run(cCtx *cli.Context) error {
+	opts := &Options{
+		args:       cCtx.Args().Slice(),
+		configFile: cCtx.String("config"),
+		group:      cCtx.String("group"),
+		system:     cCtx.String("system"),
+		maxTime:    cCtx.String("max-time"),
+		minTime:    cCtx.String("min-time"),
+		json:       cCtx.Bool("json"),
+		ApiUrl:     cCtx.String("api-url"),
+		Token:      cCtx.String("api-token"),
 	}
-
-	cmd.fs.Usage = func() {
-		fmt.Printf("  %36s\n", "logs - command-line search for SolarWinds Observability log management service")
-		fmt.Printf("    %2s, %16s %70s\n", "-h", "--help", "Show usage")
-		fmt.Printf("    %2s  %16s %70s\n", "", "--min-time MIN", "Earliest time to search from")
-		fmt.Printf("    %2s  %16s %70s\n", "", "--max-time MAX", "Latest time to search from")
-		fmt.Printf("    %2s, %16s %70s\n", "-c", "--configfile", "Path to config (~/.swo-cli.yaml)")
-		fmt.Printf("    %2s, %16s %70s\n", "-g", "--group GROUP_ID", "Group ID to search")
-		fmt.Printf("    %2s, %16s %70s\n", "-s", "--system SYSTEM", "System to search")
-		fmt.Printf("    %2s, %16s %70s\n", "-j", "--json", "Output raw JSON data (off)")
-		fmt.Printf("    %2s, %16s %70s\n", "-V", "--version", "Display the version and exit")
-
-		fmt.Println()
-
-		fmt.Println("    Usage:")
-		fmt.Println("      swo-cli logs [--min-time time] [--max-time time] [-g group-id] [-s system]")
-		fmt.Println("        [-c swo-cli.yml] [-j] [--] [query]")
-
-		fmt.Println()
-
-		fmt.Println("    Examples:")
-		fmt.Printf("    %s logs something\n", os.Args[0])
-		fmt.Printf("    %s logs 1.2.3 Failure\n", os.Args[0])
-		fmt.Printf(`    %s logs -s ns1 "connection refused"%v`, os.Args[0], "\n")
-		fmt.Printf(`    %s logs "(www OR db) (nginx OR pgsql) -accepted"%v`, os.Args[0], "\n")
-		fmt.Printf(`    %s logs -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"%v`, os.Args[0], "\n")
-		fmt.Printf(`    %s logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>%v`, os.Args[0], "\n")
-		fmt.Printf("    %s logs -- -redis\n", os.Args[0])
-	}
-
-	cmd.fs.StringVar(&cmd.opts.configFile, "c", "", "")
-	cmd.fs.StringVar(&cmd.opts.configFile, "configfile", defaultConfigFile, "")
-	cmd.fs.StringVar(&cmd.opts.group, "g", "", "")
-	cmd.fs.StringVar(&cmd.opts.group, "group", "", "")
-	cmd.fs.StringVar(&cmd.opts.system, "s", "", "")
-	cmd.fs.StringVar(&cmd.opts.system, "system", "", "")
-	cmd.fs.StringVar(&cmd.opts.ApiUrl, "api-url", defaultApiUrl, "")
-	cmd.fs.StringVar(&cmd.opts.minTime, "min-time", "", "")
-	cmd.fs.StringVar(&cmd.opts.maxTime, "max-time", "", "")
-	cmd.fs.BoolVar(&cmd.opts.json, "j", false, "")
-	cmd.fs.BoolVar(&cmd.opts.json, "json", false, "")
-	cmd.fs.BoolVar(&cmd.opts.version, "V", false, "")
-	cmd.fs.BoolVar(&cmd.opts.version, "version", false, "")
-
-	return cmd
-}
-
-func (c *command) Init(args []string) error {
-	err := c.fs.Parse(args)
-	if err != nil {
+	if err := opts.Init(cCtx.Args().Slice()); err != nil {
 		return err
 	}
-
-	opts, err := c.opts.Init(c.fs.Args())
-	if err != nil {
-		return err
-	}
-
 	client, err := NewClient(opts)
 	if err != nil {
 		return err
 	}
 
-	c.client = client
+	if err = client.Run(context.Background()); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (c *command) Run(ctx context.Context) error {
-	if c.client == nil {
-		return fmt.Errorf("%s command was not initialized", logsCommandName)
+func NewLogsCommand() *cli.Command {
+	return &cli.Command{
+		Name:  "logs",
+		Usage: "command-line search for SolarWinds Observability log management service",
+		Flags: flags,
+		ArgsUsage: `
+	
+EXAMPLES:
+   swo logs something
+   swo logs 1.2.3 Failure
+   swo logs -s ns1 "connection refused"
+   swo logs "(www OR db) (nginx OR pgsql) -accepted"
+   swo logs -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"
+   swo logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
+   swo logs -- -redis
+`,
+		Action: run,
 	}
-
-	return c.client.Run(ctx)
-}
-
-func (c *command) Name() string {
-	return logsCommandName
-}
-
-func (c *command) Usage() {
-	c.fs.Usage()
 }

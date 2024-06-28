@@ -13,11 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	defaultConfigFile = "~/.swo-cli.yml"
-	defaultApiUrl     = "https://api.na-01.cloud.solarwinds.com"
-)
-
 var (
 	now = time.Now()
 
@@ -56,19 +51,18 @@ type Options struct {
 	maxTime    string
 	minTime    string
 	json       bool
-	version    bool
 
 	ApiUrl string `yaml:"api-url"`
 	Token  string `yaml:"token"`
 }
 
-func (opts *Options) Init(args []string) (*Options, error) {
+func (opts *Options) Init(args []string) error {
 	opts.args = args
 
 	if opts.minTime != "" {
 		result, err := parseTime(opts.minTime)
 		if err != nil {
-			return nil, errors.Join(errMinTimeFlag, err)
+			return errors.Join(errMinTimeFlag, err)
 		}
 
 		opts.minTime = result
@@ -77,7 +71,7 @@ func (opts *Options) Init(args []string) (*Options, error) {
 	if opts.maxTime != "" {
 		result, err := parseTime(opts.maxTime)
 		if err != nil {
-			return nil, errors.Join(errMaxTimeFlag, err)
+			return errors.Join(errMaxTimeFlag, err)
 		}
 
 		opts.maxTime = result
@@ -86,7 +80,7 @@ func (opts *Options) Init(args []string) (*Options, error) {
 	configPath := opts.configFile
 	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	localConfig := filepath.Join(cwd, ".swo-cli.yaml")
@@ -95,7 +89,7 @@ func (opts *Options) Init(args []string) (*Options, error) {
 	} else if strings.HasPrefix(opts.configFile, "~/") {
 		usr, err := user.Current()
 		if err != nil {
-			return nil, fmt.Errorf("error while resolving current user to read configuration file: %w", err)
+			return fmt.Errorf("error while resolving current user to read configuration file: %w", err)
 		}
 
 		configPath = filepath.Join(usr.HomeDir, opts.configFile[2:])
@@ -104,7 +98,7 @@ func (opts *Options) Init(args []string) (*Options, error) {
 	if content, err := os.ReadFile(configPath); err == nil {
 		err = yaml.Unmarshal(content, opts)
 		if err != nil {
-			return nil, fmt.Errorf("error while unmarshaling %s config file: %w", configPath, err)
+			return fmt.Errorf("error while unmarshaling %s config file: %w", configPath, err)
 		}
 	}
 
@@ -112,11 +106,11 @@ func (opts *Options) Init(args []string) (*Options, error) {
 		opts.Token = token
 	}
 
-	if opts.Token == "" && !opts.version {
-		return nil, errMissingToken
+	if opts.Token == "" {
+		return errMissingToken
 	}
 
-	return opts, nil
+	return nil
 }
 
 func parseTime(input string) (string, error) {
