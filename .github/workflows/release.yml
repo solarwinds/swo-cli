@@ -1,8 +1,7 @@
 # .github/workflows/release.yml
-name: goreleaser
+name: release
 
 on:
-  pull_request:
   push:
     tags:
       - "v*"

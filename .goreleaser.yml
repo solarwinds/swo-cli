@@ -5,6 +5,8 @@ env:
 builds:
   - main: ./cmd/swo/main.go
     binary: swo
+    ldflags:
+      - "-s -w -X 'main.version=v{{ .Version }}'"
     targets:
       - darwin_amd64
       - darwin_arm64
@@ -18,7 +20,7 @@ archives:
 
 universal_binaries:
   - replace: true
-#    name_template: "{{.ProjectName}}_{{ .Os }}"
+    name_template: "swo"
 
 changelog:
   disable: true
