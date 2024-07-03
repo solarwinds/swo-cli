@@ -127,6 +127,9 @@ func TestPrepareRequest(t *testing.T) {
 			client, err := NewClient(tc.options)
 			require.NoError(t, err)
 
+			err = tc.options.Init(tc.options.args)
+			require.NoError(t, err)
+
 			request, err := client.prepareRequest(context.Background(), "")
 			require.NoError(t, err)
 
@@ -191,10 +194,15 @@ api-url: %s
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
 
-	client, err := NewClient(&Options{
+	opts := &Options{
 		configFile: configFile,
 		json:       true,
-	})
+	}
+
+	err = opts.Init([]string{})
+	require.NoError(t, err)
+
+	client, err := NewClient(opts)
 	require.NoError(t, err)
 
 	client.output = w

@@ -139,43 +139,52 @@ func (c *Client) printResult(logs []Log) error {
 	return nil
 }
 
+func (c *Client) getLogs(ctx context.Context, nextPage string) (*LogsData, error) {
+	request, err := c.prepareRequest(ctx, nextPage)
+	if err != nil {
+		return nil, fmt.Errorf("error while preparing http request to SWO: %w", err)
+	}
+
+	response, err := c.httpClient.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("error while sending http request to SWO: %w", err)
+	}
+	defer func() {
+		err := response.Body.Close()
+		if err != nil {
+			slog.Error("Could not close https body", "error", err)
+		}
+	}()
+
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error while reading http response body from SWO: %w", err)
+	}
+
+	if !(response.StatusCode >= 200 && response.StatusCode < 300) {
+		return nil, fmt.Errorf("received %d status code, response body: %s", response.StatusCode, string(content))
+	}
+
+	if len(content) == 0 {
+		return nil, fmt.Errorf("returned content is empty")
+	}
+
+	var logs LogsData
+	err = json.Unmarshal(content, &logs)
+	if err != nil {
+		return nil, fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)
+	}
+
+	return &logs, nil
+}
+
 func (c *Client) Run(ctx context.Context) error {
 	var nextPage string
 
 	for {
-		request, err := c.prepareRequest(ctx, nextPage)
+		logs, err := c.getLogs(ctx, nextPage)
 		if err != nil {
-			return fmt.Errorf("error while preparing http request to SWO: %w", err)
-		}
-
-		response, err := c.httpClient.Do(request)
-		if err != nil {
-			return fmt.Errorf("error while sending http request to SWO: %w", err)
-		}
-		defer func() {
-			err := response.Body.Close()
-			if err != nil {
-				slog.Error("Could not close https body", "error", err)
-			}
-		}()
-
-		content, err := io.ReadAll(response.Body)
-		if err != nil {
-			return fmt.Errorf("error while reading http response body from SWO: %w", err)
-		}
-
-		if !(response.StatusCode >= 200 && response.StatusCode < 300) {
-			return fmt.Errorf("received %d status code, response body: %s", response.StatusCode, string(content))
-		}
-
-		if len(content) == 0 {
-			return fmt.Errorf("returned content is empty")
-		}
-
-		var logs LogsData
-		err = json.Unmarshal(content, &logs)
-		if err != nil {
-			return fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)
+			return err
 		}
 
 		err = c.printResult(logs.Logs)
