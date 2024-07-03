@@ -70,7 +70,7 @@ func (opts *Options) Init(args []string) error {
 	}
 
 	if opts.follow { // set maxTime to <now - 10s> when 'follow' flag is set, it is used only for the first request
-		result, err := parseTime(time.Now().Add(-10 * time.Second).String())
+		result, err := parseTime(time.Now().Add(-10 * time.Second).Format(time.RFC3339))
 		if err != nil {
 			return errors.Join(errMaxTimeFlag, err)
 		}
