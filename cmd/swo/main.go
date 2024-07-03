@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var version = "v1.1.1"
+var version = "v1.1.2"
 
 func main() {
 	app := &cli.App{
