@@ -2,6 +2,7 @@ package logs
 
 import (
 	"context"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -11,6 +12,7 @@ var flags = []cli.Flag{
 	&cli.StringFlag{Name: "max-time", Usage: "latest time to search from"},
 	&cli.StringFlag{Name: "system", Aliases: []string{"s"}, Usage: "system to search"},
 	&cli.BoolFlag{Name: "json", Aliases: []string{"j"}, Usage: "output raw JSON", Value: false},
+	&cli.BoolFlag{Name: "follow", Aliases: []string{"f"}, Usage: "enable live tailing", Value: false},
 }
 
 func run(cCtx *cli.Context) error {
@@ -22,6 +24,7 @@ func run(cCtx *cli.Context) error {
 		maxTime:    cCtx.String("max-time"),
 		minTime:    cCtx.String("min-time"),
 		json:       cCtx.Bool("json"),
+		follow:     cCtx.Bool("follow"),
 		ApiUrl:     cCtx.String("api-url"),
 		Token:      cCtx.String("api-token"),
 	}
@@ -46,7 +49,7 @@ func NewLogsCommand() *cli.Command {
 		Usage: "command-line search for SolarWinds Observability log management service",
 		Flags: flags,
 		ArgsUsage: `
-	
+
 EXAMPLES:
    swo logs something
    swo logs 1.2.3 Failure

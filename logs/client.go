@@ -56,7 +56,12 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	params := url.Values{}
 	if nextPage == "" {
 		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, "v1/logs")
-		params.Add("direction", "forward")
+		if c.opts.follow {
+			params.Add("direction", "forward")
+		} else {
+			params.Add("direction", "tail")
+		}
+
 		params.Add("pageSize", "1000")
 
 		if c.opts.group != "" {
@@ -98,6 +103,10 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 		params, err = url.ParseQuery(u.RawQuery)
 		if err != nil {
 			return nil, err
+		}
+
+		if c.opts.follow {
+			params.Del("endTime")
 		}
 	}
 
@@ -185,6 +194,11 @@ func (c *Client) Run(ctx context.Context) error {
 		logs, err := c.getLogs(ctx, nextPage)
 		if err != nil {
 			return err
+		}
+
+		if len(logs.Logs) == 0 {
+			time.Sleep(2 * time.Second)
+			continue
 		}
 
 		err = c.printResult(logs.Logs)

@@ -51,6 +51,7 @@ type Options struct {
 	maxTime    string
 	minTime    string
 	json       bool
+	follow     bool
 
 	ApiUrl string `yaml:"api-url"`
 	Token  string `yaml:"token"`
@@ -66,6 +67,15 @@ func (opts *Options) Init(args []string) error {
 		}
 
 		opts.minTime = result
+	}
+
+	if opts.follow { // set maxTime to <now - 10s> when 'follow' flag is set, it is used only for the first request
+		result, err := parseTime(time.Now().Add(-10 * time.Second).String())
+		if err != nil {
+			return errors.Join(errMaxTimeFlag, err)
+		}
+
+		opts.maxTime = result
 	}
 
 	if opts.maxTime != "" {
