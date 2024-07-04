@@ -200,7 +200,7 @@ func (c *Client) Run(ctx context.Context) error {
 			break
 		}
 
-		if len(logs.Logs) == 0 {
+		if c.opts.follow && len(logs.Logs) == 0 {
 			time.Sleep(2 * time.Second)
 			continue
 		}
