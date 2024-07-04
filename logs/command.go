@@ -7,7 +7,7 @@ import (
 )
 
 var flags = []cli.Flag{
-	&cli.StringFlag{Name: "group", Aliases: []string{"g"}, Usage: "group ID to search"},
+	&cli.StringFlag{Name: "group", Aliases: []string{"g"}, Usage: "group name to search"},
 	&cli.StringFlag{Name: "min-time", Usage: "earliest time to search from", Value: "1 hour ago"},
 	&cli.StringFlag{Name: "max-time", Usage: "latest time to search from"},
 	&cli.StringFlag{Name: "system", Aliases: []string{"s"}, Usage: "system to search"},
