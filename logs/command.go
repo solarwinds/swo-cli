@@ -54,8 +54,8 @@ EXAMPLES:
    swo logs something
    swo logs 1.2.3 Failure
    swo logs -s ns1 "connection refused"
-   swo logs "(www OR db) (nginx OR pgsql) -accepted"
-   swo logs -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"
+   swo logs -f "(www OR db) (nginx OR pgsql) -accepted"
+   swo logs -f -g <SWO_GROUP_ID> "(nginx OR pgsql) -accepted"
    swo logs --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_ID>
    swo logs -- -redis
 `,
