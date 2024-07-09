@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/solarwinds/swo-cli/logs"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
+
+	"github.com/solarwinds/swo-cli/logs"
+	"github.com/urfave/cli/v2"
 )
 
-var version = "v1.1.2"
+var version = "v1.2.0"
 
 func main() {
 	app := &cli.App{
