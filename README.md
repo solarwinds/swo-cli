@@ -4,11 +4,10 @@ Small standalone command line tool to retrieve and search recent app
 server logs from [Solarwinds].
 
 ### This is v1 of the swo-cli and it supports ONLY logs search.
-### This is v1 of the swo-cli and it DOES NOT support tailing.
 
-Supports optional Boolean search queries. Example:
+Supports optional Boolean search queries and polling for new events (like "tail -f"). Example:
 
-    $ swo logs "(www OR db) (nginx OR pgsql) -accepted"
+    $ swo logs -f "(www OR db) (nginx OR pgsql) -accepted"
 
 ## Quick Start
 
@@ -114,7 +113,7 @@ If you frequently pipe output to a certain command, create a function which
 accepts optional arguments, invokes `swo` with any arguments, and pipes
 output to that command. For example, this `swocolor` function will pipe to `lnav`:
 
-    $ function swocolor() { swo logs $* | lnav; }
+    $ function swocolor() { swo logs -f $* | lnav; }
 
 Add the `function` line to your `~/.bashrc`. It can be invoked with search
 parameters:
@@ -167,7 +166,7 @@ even though one is for 4 words (AND) while the other is for a phrase:
 
 ### Multiple API tokens
 
-To use multiple API tokens (such as for separate home and work SolarWinds Observability 
+To use multiple API tokens (such as for separate home and work SolarWinds Observability
 accounts), create a `.swo-cli.yml` configuration file in each project's
 working directory and invoke the CLI in that directory. The CLI checks for
 `.swo-cli.yml` in the current working directory prior to using
