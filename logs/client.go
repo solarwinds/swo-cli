@@ -196,18 +196,17 @@ func (c *Client) Run(ctx context.Context) error {
 			return err
 		}
 
-		if logs.NextPage == "" {
-			break
+		err = c.printResult(logs.Logs)
+		if err != nil {
+			return fmt.Errorf("failed to print result: %w", err)
 		}
 
 		if c.opts.follow && len(logs.Logs) == 0 {
 			time.Sleep(2 * time.Second)
-			continue
 		}
 
-		err = c.printResult(logs.Logs)
-		if err != nil {
-			return fmt.Errorf("failed to print result: %w", err)
+		if logs.NextPage == "" {
+			break
 		}
 
 		nextPage = logs.NextPage
