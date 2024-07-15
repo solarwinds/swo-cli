@@ -2,6 +2,7 @@
 /bin
 .idea
 swo
+dist/
 
 # Binaries for programs and plugins
 *.exe
