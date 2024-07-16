@@ -7,7 +7,7 @@ server logs from [Solarwinds].
 
 Supports optional Boolean search queries and polling for new events (like "tail -f"). Example:
 
-    $ swo logs -f "(www OR db) (nginx OR pgsql) -accepted"
+    $ swo logs get -f "(www OR db) (nginx OR pgsql) -accepted"
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ The API token can also be passed in the `SWO_API_TOKEN`
 environment variable instead of a configuration file. Example:
 
     $ export SWO_API_TOKEN='123456789012345678901234567890ab'
-    $ swo logs
+    $ swo logs get
 
 
 ## Configuration
@@ -69,19 +69,19 @@ GLOBAL OPTIONS:
 To count the number of matches, pipe to `wc -l`. For example, count how
 many logs contained `Failure` in the last minute:
 
-    $ swo logs --min-time '1 minute ago' Failure | wc -l
+    $ swo logs get --min-time '1 minute ago' Failure | wc -l
     42
 
 Output only the program/file name (which is output as field 5):
 
-    $ swo logs --min-time '1 minute ago' | cut -f 5 -d ' '
+    $ swo logs get --min-time '1 minute ago' | cut -f 5 -d ' '
     passenger.log:
     sshd:
     app/web.2:
 
 Count by source/system name (field 4):
 
-    $ swo logs --min-time '1 minute ago' | cut -f 4 -d ' ' | sort | uniq -c
+    $ swo logs get --min-time '1 minute ago' | cut -f 4 -d ' ' | sort | uniq -c
       98 www42
       39 acmedb-core01
       2 fastly
@@ -98,16 +98,16 @@ For content-based colorization, pipe through [lnav]. Install `lnav` from your
 preferred package repository, such as `brew install lnav` or
 `apt-get install lnav`, then:
 
-    $ swo logs | lnav
-    $ swo logs --min-time "1 hour ago" error | lnav
+    $ swo logs get | lnav
+    $ swo logs get --min-time "1 hour ago" error | lnav
 
 ### Redirecting output
 
 Since output is line-buffered, pipes and output redirection will automatically
 work:
 
-    $ swo logs | less
-    $ swo logs --min-time '2016-01-15 10:00:00' > logs.txt
+    $ swo logs get | less
+    $ swo logs get --min-time '2016-01-15 10:00:00' > logs.txt
 
 If you frequently pipe output to a certain command, create a function which
 accepts optional arguments, invokes `swo` with any arguments, and pipes
@@ -128,7 +128,7 @@ Usually this is moot because most searches start with a positive match.
 To search only for log messages without a given string, use `--`. For
 example, to search for `-whatever`, run:
 
-    swo logs -- -whatever
+    swo logs get -- -whatever
 
 ### Time zones
 
@@ -140,7 +140,7 @@ When providing absolute times, append `UTC` to provide the input time in
 UTC. For example, regardless of the local PC time zone, this will show
 messages beginning from 1 PM UTC:
 
-    swo logs --min-time "2024-04-27 13:00:00 UTC"
+    swo logs get --min-time "2024-04-27 13:00:00 UTC"
 
 Output timestamps will still be in the local PC time zone.
 
@@ -150,7 +150,7 @@ Because the Unix shell parses and strips one set of quotes around a
 phrase, to search for a phrase, wrap the string in both single-quotes
 and double-quotes. For example:
 
-    swo logs '"Connection reset by peer"'
+    swo logs get '"Connection reset by peer"'
 
 Use one set of double-quotes and one set of single-quotes. The order
 does not matter as long as the pairs are consistent.
@@ -161,8 +161,8 @@ result, quoting strings twice is often not actually necessary. For
 example, these two searches are likely to yield the same log messages,
 even though one is for 4 words (AND) while the other is for a phrase:
 
-    swo logs Connection reset by peer
-    swo logs '"Connection reset by peer"'
+    swo logs get Connection reset by peer
+    swo logs get '"Connection reset by peer"'
 
 ### Multiple API tokens
 
@@ -174,8 +174,8 @@ working directory and invoke the CLI in that directory. The CLI checks for
 
 Alternatively, use shell aliases with different `-c` paths. For example:
 
-    echo "alias swo1='swo logs -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
-    echo "alias swo2='swo logs -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
+    echo "alias swo1='swo logs get -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
+    echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
 
 
 ### Build
@@ -187,7 +187,7 @@ Alternatively, use shell aliases with different `-c` paths. For example:
 
 1. Download repository: `$ git clone https://github.com/solarwinds/swo-cli.git`
 2. Build the binary: `$ go build ./cmd/swo`
-3. Test: `$ ./swo logs test search string`
+3. Test: `$ ./swo logs get test search string`
 
 ### Release
 
