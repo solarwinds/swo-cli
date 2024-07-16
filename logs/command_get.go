@@ -24,7 +24,7 @@ func runGet(cCtx *cli.Context) error {
 		minTime:    cCtx.String("min-time"),
 		json:       cCtx.Bool("json"),
 		follow:     cCtx.Bool("follow"),
-		ApiUrl:     cCtx.String("api-url"),
+		APIURL:     cCtx.String("api-url"),
 		Token:      cCtx.String("api-token"),
 	}
 	if err := opts.Init(cCtx.Args().Slice()); err != nil {

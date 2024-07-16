@@ -3,6 +3,7 @@ package logs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -15,7 +16,13 @@ import (
 
 const (
 	DefaultConfigFile = "~/.swo-cli.yml"
-	DefaultApiUrl     = "https://api.na-01.cloud.solarwinds.com"
+	DefaultAPIURL     = "https://api.na-01.cloud.solarwinds.com"
+)
+
+var (
+	ErrInvalidAPIResponse = errors.New("Received non-2xx status code")
+	ErrInvalidDateTime    = errors.New("Could not parse timestamp")
+	ErrNoContent          = errors.New("No content")
 )
 
 type Client struct {
@@ -37,7 +44,7 @@ type PageInfo struct {
 	NextPage string `json:"nextPage"`
 }
 
-type LogsData struct {
+type GetLogsResponse struct {
 	Logs     []Log `json:"logs"`
 	PageInfo `json:"pageInfo"`
 }
@@ -55,7 +62,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	var err error
 	params := url.Values{}
 	if nextPage == "" {
-		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, "v1/logs")
+		logsEndpoint, err = url.JoinPath(c.opts.APIURL, "v1/logs")
 		if c.opts.follow {
 			params.Add("direction", "tail")
 		} else {
@@ -95,7 +102,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 			return nil, fmt.Errorf("failed to parse nextPage field: %w", err)
 		}
 
-		logsEndpoint, err = url.JoinPath(c.opts.ApiUrl, u.Path)
+		logsEndpoint, err = url.JoinPath(c.opts.APIURL, u.Path)
 		if err != nil {
 			return nil, err
 		}
@@ -114,13 +121,13 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 		return nil, err
 	}
 
-	logsUrl, err := url.Parse(logsEndpoint)
+	logsURL, err := url.Parse(logsEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	logsUrl.RawQuery = params.Encode()
-	request, err := http.NewRequestWithContext(ctx, "GET", logsUrl.String(), nil)
+	logsURL.RawQuery = params.Encode()
+	request, err := http.NewRequestWithContext(ctx, "GET", logsURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +155,7 @@ func (c *Client) printResult(logs []Log) error {
 	return nil
 }
 
-func (c *Client) getLogs(ctx context.Context, nextPage string) (*LogsData, error) {
+func (c *Client) getLogs(ctx context.Context, nextPage string) (*GetLogsResponse, error) {
 	request, err := c.prepareRequest(ctx, nextPage)
 	if err != nil {
 		return nil, fmt.Errorf("error while preparing http request to SWO: %w", err)
@@ -171,14 +178,14 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*LogsData, error
 	}
 
 	if !(response.StatusCode >= 200 && response.StatusCode < 300) {
-		return nil, fmt.Errorf("received %d status code, response body: %s", response.StatusCode, string(content))
+		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))
 	}
 
 	if len(content) == 0 {
-		return nil, fmt.Errorf("returned content is empty")
+		return nil, ErrNoContent
 	}
 
-	var logs LogsData
+	var logs GetLogsResponse
 	err = json.Unmarshal(content, &logs)
 	if err != nil {
 		return nil, fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)

@@ -20,7 +20,7 @@ import (
 
 var (
 	configFile = filepath.Join(os.TempDir(), "config-file.yaml")
-	logsData   = LogsData{
+	logsData   = GetLogsResponse{
 		Logs: []Log{
 			{
 				Time:     time.Now(),
@@ -77,7 +77,7 @@ func TestPrepareRequest(t *testing.T) {
 	}{
 		{
 			name:           "default request",
-			options:        &Options{configFile: configFile, ApiUrl: DefaultApiUrl},
+			options:        &Options{configFile: configFile, APIURL: DefaultAPIURL},
 			expectedValues: map[string][]string{},
 		},
 		{
@@ -173,7 +173,8 @@ func TestRun(t *testing.T) {
 
 	mux := http.NewServeMux()
 	server := &http.Server{
-		Handler: mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		Handler:           mux,
 	}
 
 	wg.Add(1)

@@ -16,7 +16,7 @@ func main() {
 		Usage:   "SolarWinds Observability Command-Line Interface",
 		Version: version,
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "api-url", Usage: "URL of the SWO API", Value: logs.DefaultApiUrl},
+			&cli.StringFlag{Name: "api-url", Usage: "URL of the SWO API", Value: logs.DefaultAPIURL},
 			&cli.StringFlag{Name: "api-token", Usage: "API token"},
 			&cli.StringFlag{Name: "config", Aliases: []string{"c"}, Usage: "path to config", Value: logs.DefaultConfigFile},
 		},
