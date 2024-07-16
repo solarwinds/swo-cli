@@ -22,7 +22,5 @@ universal_binaries:
   - replace: true
     name_template: "swo"
 
-changelog:
-  disable: true
 checksum:
   name_template: 'checksums.txt'
