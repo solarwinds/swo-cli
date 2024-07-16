@@ -31,7 +31,7 @@ func TestNewOptions(t *testing.T) {
 			expected: Options{
 				args:       []string{},
 				configFile: configFile,
-				ApiUrl:     "https://api.solarwinds.com",
+				APIURL:     "https://api.solarwinds.com",
 				Token:      "123456",
 			},
 			action: func() {
@@ -44,11 +44,11 @@ api-url: https://api.solarwinds.com
 		},
 		{
 			name: "read token from config file",
-			opts: &Options{configFile: configFile, ApiUrl: DefaultApiUrl},
+			opts: &Options{configFile: configFile, APIURL: DefaultAPIURL},
 			expected: Options{
 				args:       []string{},
 				configFile: configFile,
-				ApiUrl:     DefaultApiUrl,
+				APIURL:     DefaultAPIURL,
 				Token:      "123456",
 			},
 			action: func() {
@@ -58,11 +58,11 @@ api-url: https://api.solarwinds.com
 		},
 		{
 			name: "read token from env var",
-			opts: &Options{configFile: DefaultConfigFile, ApiUrl: DefaultApiUrl},
+			opts: &Options{configFile: DefaultConfigFile, APIURL: DefaultAPIURL},
 			expected: Options{
 				args:       []string{},
 				configFile: DefaultConfigFile,
-				ApiUrl:     DefaultApiUrl,
+				APIURL:     DefaultAPIURL,
 				Token:      "tokenFromEnvVar",
 			},
 			action: func() {

@@ -53,7 +53,7 @@ type Options struct {
 	json       bool
 	follow     bool
 
-	ApiUrl string `yaml:"api-url"`
+	APIURL string `yaml:"api-url"`
 	Token  string `yaml:"token"`
 }
 
@@ -149,7 +149,7 @@ func parseTime(input string) (string, error) {
 		return "", err
 	}
 	if result == nil {
-		return "", errors.New("failed to parse time")
+		return "", ErrInvalidDateTime
 	}
 
 	return result.Time.In(location).Format(time.RFC3339), nil

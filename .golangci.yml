@@ -1,0 +1,11 @@
+linters:
+  disable-all: true
+  enable:
+    - ireturn
+    - err113
+    - revive
+    - gosec
+    - errcheck
+    - nilnil
+    - nilerr
+    - staticcheck
