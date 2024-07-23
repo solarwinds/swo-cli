@@ -11,21 +11,19 @@ Supports optional Boolean search queries and polling for new events (like "tail 
 
 ## Quick Start
 
-Install [Go]
+Download the latest release from the [Releases](https://github.com/solarwinds/swo-cli/releases) page.
 
-    $ go install github.com/solarwinds/swo-cli/cmd/swo@latest
+Retrieve the full-access token from SolarWinds Observability and add it to ~/.swo-cli.yml.
+
     $ echo "token: 123456789012345678901234567890ab" > ~/.swo-cli.yml
     $ echo "api-url: https://api.na-01.cloud.solarwinds.com" >> ~/.swo-cli.yml
     $ swo
-
-Retrieve the full-access token from SolarWinds Observability.
 
 The API token can also be passed in the `SWO_API_TOKEN`
 environment variable instead of a configuration file. Example:
 
     $ export SWO_API_TOKEN='123456789012345678901234567890ab'
     $ swo logs get
-
 
 ## Configuration
 
