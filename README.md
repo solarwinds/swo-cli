@@ -1,13 +1,7 @@
-# swo command-line client for SolarWinds Observability platform
+# Command-line client for SolarWinds Observability
 
-Small standalone command line tool to retrieve and search recent app
-server logs from [Solarwinds].
-
-### This is v1 of the swo-cli and it supports ONLY logs search.
-
-Supports optional Boolean search queries and polling for new events (like "tail -f"). Example:
-
-    $ swo logs get -f "(www OR db) (nginx OR pgsql) -accepted"
+Standalone command line tool to retrieve and search recent app
+server logs from [SolarWinds Observability](https://www.solarwinds.com/solarwinds-platform).
 
 ## Quick Start
 
@@ -34,7 +28,7 @@ examples/swo-cli.yml.example):
     token: 123456789012345678901234567890ab
     api-url: https://api.na-01.cloud.solarwinds.com
 
-Retrieve token from SolarWinds Observability page (`Settings` -> `API Tokens` -> `Create API Token` -> `Full Access`).
+Retrieve your token from SolarWinds Observability (`Settings` -> `API Tokens` -> `Create API Token` -> `Full Access`).
 
 ## Usage & Examples
 
