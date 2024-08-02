@@ -2,6 +2,7 @@
 /bin
 .idea
 swo
+dist/
 
 # Binaries for programs and plugins
 *.exe
@@ -25,3 +26,4 @@ go.work.sum
 
 # env file
 .env
+env_vars.sh
