@@ -23,7 +23,7 @@ builds:
     hooks:
       post:
         - env:
-            - SP_SIGNING_POLICY=Release
+            - SP_SIGNING_POLICY=Stage
             - SP_ARTIFACT_CONFIGURATION=exe
           cmd: pwsh -c "Submit-SigningRequest -ApiToken "$env:SP_CI_USER_TOKEN" -OrganizationId "$env:SP_ORGANIZATION_ID" -ProjectSlug "$env:SP_PROJECT" -SigningPolicySlug "$env:SP_SIGNING_POLICY" -ArtifactConfigurationSlug "$env:SP_ARTIFACT_CONFIGURATION" -InputArtifactPath '{{ .Path }}' -OutputArtifactPath '{{ .Path }}' -Force -WaitForCompletion"
           output: true
