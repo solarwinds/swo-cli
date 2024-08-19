@@ -10,11 +10,11 @@ jobs:
   check-secret:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if SECRET_KEY is set
+      - name: Check if SWO_ISSUER_ID is set
         run: |
           if [ -z "${{ secrets.SWO_ISSUER_ID }}" ]; then
-            echo "Error: SECRET_KEY is not set."
+            echo "Error: SWO_ISSUER_ID is not set."
             exit 1
           else
-            echo "SECRET_KEY is set."
+            echo "SWO_ISSUER_ID is set."
           fi
