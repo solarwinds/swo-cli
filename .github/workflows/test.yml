@@ -1,0 +1,20 @@
+name: Check Secret Variable
+
+on:
+  push:
+    branches:
+      - NH-85695-Add-signing-binaries-mac
+  pull_request:
+
+jobs:
+  check-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if SECRET_KEY is set
+        run: |
+          if [ -z "${{ secrets.SWO_ISSUER_ID }}" ]; then
+            echo "Error: SECRET_KEY is not set."
+            exit 1
+          else
+            echo "SECRET_KEY is set."
+          fi
