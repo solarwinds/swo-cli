@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - NH-85695-Add-signing-binaries-mac
-
 jobs:
   check-secret:
     runs-on: ubuntu-latest
