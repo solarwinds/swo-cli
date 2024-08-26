@@ -9,10 +9,11 @@ jobs:
   check-secret:
     runs-on: ubuntu-latest
     env:
-      super_secret: ${{ secrets.SWO_ISSUER_ID }}
+      super_secret: ${{ secrets.SWO_KEY_ID }}
     steps:
       - if: ${{ env.super_secret != '' }}
         run: echo 'This step will only run if the secret has a value set.'
       - if: ${{ env.super_secret == '' }}
         run: echo 'This step will only run if the secret does not have a value set.'
+      - run: echo ${{ secrets.SWO_KEY_ID  }}
 
