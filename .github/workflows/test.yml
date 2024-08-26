@@ -8,12 +8,11 @@ on:
 jobs:
   check-secret:
     runs-on: ubuntu-latest
+    env:
+      super_secret: ${{ secrets.SWO_ISSUER_ID }}
     steps:
-      - name: Check if SWO_ISSUER_ID is set
-        run: |
-          if [ -z "${{ secrets.SWO_ISSUER_ID }}" ]; then
-            echo "Error: SWO_ISSUER_ID is not set."
-            exit 1
-          else
-            echo "SWO_ISSUER_ID is set."
-          fi
+      - if: ${{ env.super_secret != '' }}
+        run: echo 'This step will only run if the secret has a value set.'
+      - if: ${{ env.super_secret == '' }}
+        run: echo 'This step will only run if the secret does not have a value set.'
+
