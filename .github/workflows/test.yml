@@ -8,11 +8,15 @@ on:
 jobs:
   check-secret:
     runs-on: ubuntu-latest
-    env:
-      super_secret: ${{ secrets.SWO_KEY_ID }}
     steps:
-      - if: ${{ env.super_secret != '' }}
-        run: echo 'This step will only run if the secret has a value set.'
-      - if: ${{ env.super_secret == '' }}
-        run: echo 'This step will only run if the secret does not have a value set.'
+      - name: "check is SWO_KEY_ID exists"
+        env:
+          super_secret: ${{ secrets.SWO_KEY_ID }}
+        if: ${{ env.super_secret == '' }}
+        run: 'echo "echo the secret \"SWO_KEY_ID\" has not been made; echo please go to \"settings \> secrets \> actions\" to create it"'
 
+      - name: "check is REPO_KEY_ID exists"
+        env:
+          super_secret_2: ${{ secrets.REPO_KEY_ID }}
+        if: ${{ env.super_secret_2 == '' }}
+        run: 'echo "echo the secret \"REPO_KEY_ID\" has not been made; echo please go to \"settings \> secrets \> actions\" to create it"'
