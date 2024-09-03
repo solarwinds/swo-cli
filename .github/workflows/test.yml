@@ -8,6 +8,7 @@ on:
 jobs:
   check-secret:
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - name: "check is SWO_KEY_ID exists"
         env:
