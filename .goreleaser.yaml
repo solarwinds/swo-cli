@@ -55,7 +55,7 @@ notarize:
 
       notarize:
         issuer_id: "{{.Env.SWO_ISSUER_ID}}"
-        key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
+        key_id: "{{.Env.SWO_KEY_ID}}"
         key: "{{.Env.SWO_MAC_P8_FILE}}"
         wait: true
         timeout: 20m
