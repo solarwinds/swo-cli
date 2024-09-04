@@ -58,7 +58,7 @@ notarize:
         key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
         key: "{{.Env.SWO_MAC_P8_FILE}}"
         wait: true
-        timeout: 20
+        timeout: 20m
 
 changelog:
   disable: true
