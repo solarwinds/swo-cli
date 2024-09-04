@@ -2,6 +2,7 @@ env:
   - CGO_ENABLED=0
   - REPO_OWNER=solarwinds
   - REPO_NAME=swo-cli
+
 builds:
   - main: ./cmd/swo/main.go
     id: linux
@@ -27,6 +28,7 @@ builds:
             - SP_ARTIFACT_CONFIGURATION=exe
           cmd: pwsh -c "Submit-SigningRequest -ApiToken "$env:SP_CI_USER_TOKEN" -OrganizationId "$env:SP_ORGANIZATION_ID" -ProjectSlug "$env:SP_PROJECT" -SigningPolicySlug "$env:SP_SIGNING_POLICY" -ArtifactConfigurationSlug "$env:SP_ARTIFACT_CONFIGURATION" -InputArtifactPath '{{ .Path }}' -OutputArtifactPath '{{ .Path }}' -Force -WaitForCompletion"
           output: true
+
 archives:
   - builds:
       - win
@@ -41,6 +43,22 @@ universal_binaries:
       - "linux"
     replace: true
     name_template: "swo"
+
+notarize:
+  macos:
+    enabled: '{{ isEnvSet "SWO_MAC_P12_CERT" }}'
+    ids:
+      - mac
+    sign:
+      certificate: "{{.Env.SWO_MAC_P12_CERT}}"
+      password: "{{.Env.SWO_P12_PASSWORD}}"
+
+    notarize:
+      issuer_id: "{{.Env.SWO_ISSUER_ID}}"
+      key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
+      key: "{{.Env.SWO_MAC_P8_FILE}}"
+      wait: true
+      timeout: 20m
 
 changelog:
   disable: true
