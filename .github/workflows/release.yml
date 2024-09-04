@@ -3,8 +3,8 @@ name: release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - NH-85695-Add-signing-binaries-mac
 
 permissions:
   contents: write
