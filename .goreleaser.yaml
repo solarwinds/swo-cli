@@ -46,19 +46,19 @@ universal_binaries:
 
 notarize:
   macos:
-    enabled: '{{ isEnvSet "SWO_MAC_P12_CERT" }}'
-    ids:
-      - mac
-    sign:
-      certificate: "{{.Env.SWO_MAC_P12_CERT}}"
-      password: "{{.Env.SWO_P12_PASSWORD}}"
+    - enabled: '{{ isEnvSet "SWO_MAC_P12_CERT" }}'
+      ids:
+        - mac
+      sign:
+        certificate: "{{.Env.SWO_MAC_P12_CERT}}"
+        password: "{{.Env.SWO_P12_PASSWORD}}"
 
-    notarize:
-      issuer_id: "{{.Env.SWO_ISSUER_ID}}"
-      key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
-      key: "{{.Env.SWO_MAC_P8_FILE}}"
-      wait: true
-      timeout: 20m
+      notarize:
+        issuer_id: "{{.Env.SWO_ISSUER_ID}}"
+        key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
+        key: "{{.Env.SWO_MAC_P8_FILE}}"
+        wait: true
+        timeout: 20
 
 changelog:
   disable: true
