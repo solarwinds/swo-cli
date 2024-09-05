@@ -1,4 +1,4 @@
-golangci-lint-version = v1.56.1
+golangci-lint-version = v1.60.3
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
