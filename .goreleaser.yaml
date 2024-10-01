@@ -60,8 +60,5 @@ notarize:
         wait: true
         timeout: 20m
 
-changelog:
-  disable: true
-
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
