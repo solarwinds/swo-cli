@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-const (
-	DefaultConfigFile = "~/.swo-cli.yml"
-	DefaultAPIURL     = "https://api.na-01.cloud.solarwinds.com"
-)
-
 var (
 	ErrInvalidAPIResponse = errors.New("Received non-2xx status code")
 	ErrInvalidDateTime    = errors.New("Could not parse timestamp")

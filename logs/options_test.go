@@ -26,85 +26,24 @@ func TestNewOptions(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name: "read full config file",
-			opts: &Options{configFile: configFile},
-			expected: Options{
-				args:       []string{},
-				configFile: configFile,
-				APIURL:     "https://api.solarwinds.com",
-				Token:      "123456",
-			},
-			action: func() {
-				yamlStr := `
-token: 123456
-api-url: https://api.solarwinds.com
-`
-				createConfigFile(t, configFile, yamlStr)
-			},
-		},
-		{
-			name: "read token from config file",
-			opts: &Options{configFile: configFile, APIURL: DefaultAPIURL},
-			expected: Options{
-				args:       []string{},
-				configFile: configFile,
-				APIURL:     DefaultAPIURL,
-				Token:      "123456",
-			},
-			action: func() {
-				yamlStr := "token: 123456"
-				createConfigFile(t, configFile, yamlStr)
-			},
-		},
-		{
-			name: "read token from env var",
-			opts: &Options{configFile: DefaultConfigFile, APIURL: DefaultAPIURL},
-			expected: Options{
-				args:       []string{},
-				configFile: DefaultConfigFile,
-				APIURL:     DefaultAPIURL,
-				Token:      "tokenFromEnvVar",
-			},
-			action: func() {
-				err := os.Setenv("SWO_API_TOKEN", "tokenFromEnvVar")
-				require.NoError(t, err)
-			},
-		},
-		{
-			name: "missing token",
-			opts: &Options{},
-			expected: Options{
-				args: []string{},
-			},
-			expectedError: errMissingToken,
-		},
-		{
 			name: "parse human readable min time",
-			opts: &Options{configFile: configFile, minTime: "5 seconds ago"},
+			opts: &Options{minTime: "5 seconds ago"},
 			expected: Options{
-				args:       []string{},
-				configFile: configFile,
-				minTime:    "2000-01-01T10:00:25Z",
-				Token:      "123456",
+				args:    []string{},
+				minTime: "2000-01-01T10:00:25Z",
 			},
 			action: func() {
-				yamlStr := "token: 123456"
-				createConfigFile(t, configFile, yamlStr)
 				now = fixedTime
 			},
 		},
 		{
 			name: "parse human readable max time",
-			opts: &Options{configFile: configFile, maxTime: "in 5 seconds"},
+			opts: &Options{maxTime: "in 5 seconds"},
 			expected: Options{
-				args:       []string{},
-				configFile: configFile,
-				maxTime:    "2000-01-01T10:00:35Z",
-				Token:      "123456",
+				args:    []string{},
+				maxTime: "2000-01-01T10:00:35Z",
 			},
 			action: func() {
-				yamlStr := "token: 123456"
-				createConfigFile(t, configFile, yamlStr)
 				now = fixedTime
 			},
 		},

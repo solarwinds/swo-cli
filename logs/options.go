@@ -2,23 +2,17 @@ package logs
 
 import (
 	"errors"
-	"fmt"
-	"os"
-	"os/user"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/olebedev/when"
-	"gopkg.in/yaml.v3"
 )
 
 var (
 	now = time.Now()
 
-	errMinTimeFlag  = errors.New("failed to parse --min-time flag")
-	errMaxTimeFlag  = errors.New("failed to parse --max-time flag")
-	errMissingToken = errors.New("failed to find token")
+	errMinTimeFlag = errors.New("failed to parse --min-time flag")
+	errMaxTimeFlag = errors.New("failed to parse --max-time flag")
 
 	timeLayouts = []string{
 		time.Layout,
@@ -52,9 +46,8 @@ type Options struct {
 	minTime    string
 	json       bool
 	follow     bool
-
-	APIURL string `yaml:"api-url"`
-	Token  string `yaml:"token"`
+	Token      string
+	APIURL     string
 }
 
 func (opts *Options) Init(args []string) error {
@@ -85,39 +78,6 @@ func (opts *Options) Init(args []string) error {
 		}
 
 		opts.maxTime = result
-	}
-
-	configPath := opts.configFile
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	localConfig := filepath.Join(cwd, ".swo-cli.yaml")
-	if _, err := os.Stat(localConfig); err == nil {
-		configPath = localConfig
-	} else if strings.HasPrefix(opts.configFile, "~/") {
-		usr, err := user.Current()
-		if err != nil {
-			return fmt.Errorf("error while resolving current user to read configuration file: %w", err)
-		}
-
-		configPath = filepath.Join(usr.HomeDir, opts.configFile[2:])
-	}
-
-	if content, err := os.ReadFile(configPath); err == nil {
-		err = yaml.Unmarshal(content, opts)
-		if err != nil {
-			return fmt.Errorf("error while unmarshaling %s config file: %w", configPath, err)
-		}
-	}
-
-	if token := os.Getenv("SWO_API_TOKEN"); token != "" {
-		opts.Token = token
-	}
-
-	if opts.Token == "" {
-		return errMissingToken
 	}
 
 	return nil

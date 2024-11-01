@@ -2,30 +2,41 @@ package logs
 
 import (
 	"context"
+	"github.com/solarwinds/swo-cli/config"
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	ConfigContextKey  = "config"
+	GroupContextKey   = "group"
+	SystemContextKey  = "system"
+	MaxTimeContextKey = "max-time"
+	MinTimeContextKey = "min-time"
+	JSONContextKey    = "json"
+	FollowContextKey  = "follow"
+)
+
 var flagsGet = []cli.Flag{
-	&cli.StringFlag{Name: "group", Aliases: []string{"g"}, Usage: "group name to search"},
-	&cli.StringFlag{Name: "min-time", Usage: "earliest time to search from", Value: "1 hour ago"},
-	&cli.StringFlag{Name: "max-time", Usage: "latest time to search from"},
-	&cli.StringFlag{Name: "system", Aliases: []string{"s"}, Usage: "system to search"},
-	&cli.BoolFlag{Name: "json", Aliases: []string{"j"}, Usage: "output raw JSON", Value: false},
-	&cli.BoolFlag{Name: "follow", Aliases: []string{"f"}, Usage: "enable live tailing", Value: false},
+	&cli.StringFlag{Name: GroupContextKey, Aliases: []string{"g"}, Usage: "group name to search"},
+	&cli.StringFlag{Name: MinTimeContextKey, Usage: "earliest time to search from", Value: "1 hour ago"},
+	&cli.StringFlag{Name: MaxTimeContextKey, Usage: "latest time to search from"},
+	&cli.StringFlag{Name: SystemContextKey, Aliases: []string{"s"}, Usage: "system to search"},
+	&cli.BoolFlag{Name: JSONContextKey, Aliases: []string{"j"}, Usage: "output raw JSON", Value: false},
+	&cli.BoolFlag{Name: FollowContextKey, Aliases: []string{"f"}, Usage: "enable live tailing", Value: false},
 }
 
 func runGet(cCtx *cli.Context) error {
 	opts := &Options{
 		args:       cCtx.Args().Slice(),
-		configFile: cCtx.String("config"),
-		group:      cCtx.String("group"),
-		system:     cCtx.String("system"),
-		maxTime:    cCtx.String("max-time"),
-		minTime:    cCtx.String("min-time"),
-		json:       cCtx.Bool("json"),
-		follow:     cCtx.Bool("follow"),
-		APIURL:     cCtx.String("api-url"),
-		Token:      cCtx.String("api-token"),
+		configFile: cCtx.String(ConfigContextKey),
+		group:      cCtx.String(GroupContextKey),
+		system:     cCtx.String(SystemContextKey),
+		maxTime:    cCtx.String(MaxTimeContextKey),
+		minTime:    cCtx.String(MinTimeContextKey),
+		json:       cCtx.Bool(JSONContextKey),
+		follow:     cCtx.Bool(FollowContextKey),
+		APIURL:     cCtx.String(config.APIURLContextKey),
+		Token:      cCtx.String(config.TokenContextKey),
 	}
 	if err := opts.Init(cCtx.Args().Slice()); err != nil {
 		return err
