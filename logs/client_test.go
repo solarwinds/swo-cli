@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/solarwinds/swo-cli/config"
 	"io"
 	"net"
 	"net/http"
@@ -41,29 +42,11 @@ var (
 	}
 )
 
-func createConfigFile(t *testing.T, filename, content string) {
-	_ = os.Remove(filename)
-	f, err := os.Create(filename)
-	require.NoError(t, err, "creating a temporary file should not fail")
-
-	n, err := f.Write([]byte(content))
-	require.Equal(t, n, len(content))
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		os.Remove(filename)
-	})
-}
-
 func TestPrepareRequest(t *testing.T) {
 	location, err := time.LoadLocation("GMT")
 	require.NoError(t, err)
 
 	time.Local = location
-
-	token := "1234567"
-	yamlStr := fmt.Sprintf("token: %s", token)
-	createConfigFile(t, configFile, yamlStr)
 
 	fixedTime, err := time.Parse(time.DateTime, "2000-01-01 10:00:30")
 	require.NoError(t, err)
@@ -77,16 +60,16 @@ func TestPrepareRequest(t *testing.T) {
 	}{
 		{
 			name:           "default request",
-			options:        &Options{configFile: configFile, APIURL: DefaultAPIURL},
+			options:        &Options{Token: "123456"},
 			expectedValues: map[string][]string{},
 		},
 		{
 			name: "custom count group startTime and endTime",
 			options: &Options{
-				configFile: configFile,
-				group:      "groupValue",
-				minTime:    "10 seconds ago",
-				maxTime:    "2 seconds ago",
+				Token:   "123456",
+				group:   "groupValue",
+				minTime: "10 seconds ago",
+				maxTime: "2 seconds ago",
 			},
 			expectedValues: map[string][]string{
 				"group":     {"groupValue"},
@@ -96,7 +79,7 @@ func TestPrepareRequest(t *testing.T) {
 		},
 		{
 			name:    "system flag",
-			options: &Options{configFile: configFile, system: "systemValue"},
+			options: &Options{Token: "123456", system: "systemValue"},
 			expectedValues: map[string][]string{
 				"filter": {`host:"systemValue"`},
 			},
@@ -104,9 +87,9 @@ func TestPrepareRequest(t *testing.T) {
 		{
 			name: "system flag with filter",
 			options: &Options{
-				args:       []string{`"access denied"`, "1.2.3.4", "-sshd"},
-				configFile: configFile,
-				system:     "systemValue",
+				Token:  "123456",
+				args:   []string{`"access denied"`, "1.2.3.4", "-sshd"},
+				system: "systemValue",
 			},
 			expectedValues: map[string][]string{
 				"filter": func() []string {
@@ -140,14 +123,13 @@ func TestPrepareRequest(t *testing.T) {
 
 			header := request.Header
 			for k, v := range map[string][]string{
-				"Authorization": {fmt.Sprintf("Bearer %s", token)},
+				"Authorization": {"Bearer 123456"},
 				"Accept":        {"application/json"},
 			} {
 				require.ElementsMatch(t, v, header[k])
 			}
 		})
 	}
-
 }
 
 func TestRun(t *testing.T) {
@@ -185,19 +167,13 @@ func TestRun(t *testing.T) {
 		err = server.Serve(listener)
 	}()
 
-	token := "1234567"
-	yamlStr := fmt.Sprintf(`
-token: %s
-api-url: %s
-`, token, fmt.Sprintf("http://%s", listener.Addr().String()))
-	createConfigFile(t, configFile, yamlStr)
-
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
 
 	opts := &Options{
-		configFile: configFile,
-		json:       true,
+		Token:  "123456",
+		APIURL: fmt.Sprintf("http://%s", listener.Addr().String()),
+		json:   true,
 	}
 
 	err = opts.Init([]string{})
@@ -253,8 +229,7 @@ func TestPrintResultStandard(t *testing.T) {
 
 	time.Local = location
 
-	createConfigFile(t, configFile, "token: 1234567")
-	client, err := NewClient(&Options{configFile: configFile})
+	client, err := NewClient(&Options{Token: "123456", APIURL: config.DefaultAPIURL})
 	require.NoError(t, err)
 
 	r, w, err := os.Pipe()
@@ -290,8 +265,7 @@ func TestPrintResultJSON(t *testing.T) {
 
 	time.Local = location
 
-	createConfigFile(t, configFile, "token: 1234567")
-	client, err := NewClient(&Options{configFile: configFile, json: true})
+	client, err := NewClient(&Options{Token: "123456", APIURL: config.DefaultAPIURL, json: true})
 	require.NoError(t, err)
 
 	r, w, err := os.Pipe()
