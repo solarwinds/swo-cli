@@ -3,7 +3,7 @@ module github.com/solarwinds/swo-cli
 go 1.22.0
 
 require (
-	github.com/olebedev/when v1.0.0
+	github.com/olebedev/when v1.1.0
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.5
 	gopkg.in/yaml.v3 v3.0.1
