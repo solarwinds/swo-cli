@@ -30,6 +30,25 @@ examples/swo-cli.yml.example):
 
 Retrieve your token from SolarWinds Observability (`Settings` -> `API Tokens` -> `Create API Token` -> `Full Access`).
 
+## How to use a Command Line Interface
+To use a Command Line Interface (CLI), which is also known as a terminal or command prompt, you'll need to locate and 
+open the appropriate application on your operating system (Windows, macOS, or Linux), then type commands and press 
+Enter to execute them.
+
+1. Locate the CLI:
+* Windows: Search for "Command Prompt" or "PowerShell" in the Start Menu or by pressing the Windows key and typing "cmd" or "powershell".
+* macOS: Open the Finder application (usually on the toolbar), navigate to /Applications/Utilities, and select "Terminal".
+* Linux: Use the shortcut CTRL+ALT+T, or navigate to the Terminal application within your applications menu.
+
+2. Open the CLI:
+* Windows: Right-click on "Command Prompt" or "PowerShell" and select "Run as Administrator" if you need elevated privileges.
+* macOS/Linux: Simply launch the Terminal application.
+
+3. Execute commands:
+* Once the CLI is open, you'll see a prompt where you can type commands.
+* In the prompt, navigate to where swo-cli is located.
+* Once, in the same directory as swo-cli, execute a command (see [Usage & Examples](#usage--examples)) by typing a command in the prompt. Each command should be followed by pressing the Enter key to execute it.
+
 ## Usage & Examples
 
 ```
