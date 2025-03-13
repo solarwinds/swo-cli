@@ -182,7 +182,7 @@ Build from binary
 2. Build the binary: `$ go build ./cmd/swo`
 3. Test: `$ ./swo logs get test search string`
 
-Download application:
+Download application
 1. Download the appropriate .zip for your OS: https://github.com/solarwinds/swo-cli/releases
 2. Unzip downloaded file.
 3. From a command line, navigate into the folder, and execute commands against the `swo` application:
