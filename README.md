@@ -7,28 +7,30 @@ server logs from [SolarWinds Observability](https://www.solarwinds.com/solarwind
 
 Download the latest release from the [Releases](https://github.com/solarwinds/swo-cli/releases) page.
 
-Retrieve the full-access token from SolarWinds Observability and add it to ~/.swo-cli.yml.
+Retrieve the full-access token from SolarWinds Observability and add it to `~/.swo-cli.yml`.
 
     $ echo "token: 123456789012345678901234567890ab" > ~/.swo-cli.yml
     $ echo "api-url: https://api.na-01.cloud.solarwinds.com" >> ~/.swo-cli.yml
-    $ swo
 
-The API token can also be passed in the `SWO_API_TOKEN`
-environment variable instead of a configuration file. Example:
-
-    $ export SWO_API_TOKEN='123456789012345678901234567890ab'
-    $ swo logs get
+From a command line, navigate into the folder, and execute commands 
+against the `swo` application:
+   - Windows: `> .\swo.exe --help`
+   - macOS/Linux: `$ ./swo --help`
 
 ## Configuration
 
-Create ~/.swo-cli.yml containing your full-access API token and API URL, or specify the
-path to that file with -c. Example (from
-examples/swo-cli.yml.example):
+Retrieve your token from SolarWinds Observability (`Settings` -> `
+API Tokens` -> `Create API Token` -> `Full Access`).
+
+Create config file in your home directory `~/.swo-cli.yml` 
+containing your full-access API token and API URL, 
+or create file in the directory of your choosing and use 
+option `-c /path/to/swo-cli-home.yml` at runtime. 
+
+Example file:
 
     token: 123456789012345678901234567890ab
     api-url: https://api.na-01.cloud.solarwinds.com
-
-Retrieve your token from SolarWinds Observability (`Settings` -> `API Tokens` -> `Create API Token` -> `Full Access`).
 
 ## Usage & Examples
 
@@ -170,16 +172,13 @@ Alternatively, use shell aliases with different `-c` paths. For example:
     echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
 
 
-### Build
-
-1. Bump `Version` in `version/version.go`
-2. Build the swo CLI: `$ go build ./cmd/swo`
+## Development & Contribute
 
 ### Install & Test
 
 1. Download repository: `$ git clone https://github.com/solarwinds/swo-cli.git`
 2. Build the binary: `$ go build ./cmd/swo`
-3. Test: `$ ./swo logs get test search string`
+3. Test: `$ swo logs get test search string`
 
 ### Release
 
@@ -187,20 +186,18 @@ Alternatively, use shell aliases with different `-c` paths. For example:
 2. Bump tag on main branch
 3. Push to upstream
 
-## Contribute
+### Testing:
 
-Testing:
+1. Run all the tests with `go test -v -count=1 ./...`
+2. Run go linter with `make ci-lint`
 
-Run all the tests with `go test -v -count=1 ./...`
-Run go linter with `make ci-lint`
-
-Bug report:
+### Bug report:
 
 1. See whether the issue has already been reported:
    http://github.com/solarwinds/swo-cli/issues/
 2. If you don't find one, create an issue with a repro case.
 
-Enhancement or fix:
+### Enhancement or fix:
 
 1. Fork the project:
    http://github.com/solarwinds/swo-cli
