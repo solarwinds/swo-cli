@@ -3,7 +3,7 @@ package logs
 import (
 	"context"
 	"github.com/solarwinds/swo-cli/config"
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 )
 
 const (

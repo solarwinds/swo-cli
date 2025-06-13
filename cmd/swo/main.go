@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/solarwinds/swo-cli/logs"
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 )
 
 var version = "v1.3.2"

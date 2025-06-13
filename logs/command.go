@@ -1,7 +1,7 @@
 package logs
 
 import (
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 )
 
 func NewLogsCommand() *cli.Command {
