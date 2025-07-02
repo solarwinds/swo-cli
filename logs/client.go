@@ -1,3 +1,4 @@
+// Package logs provides a client for retrieving and displaying logs from the SWO API.
 package logs
 
 import (
@@ -15,18 +16,22 @@ import (
 )
 
 var (
-	ErrInvalidAPIResponse = errors.New("Received non-2xx status code")
-	ErrInvalidDateTime    = errors.New("Could not parse timestamp")
-	ErrNoContent          = errors.New("No content")
+	// ErrInvalidAPIResponse indicates a non-2xx status code was received from the API
+	ErrInvalidAPIResponse = errors.New("received non-2xx status code")
+	// ErrInvalidDateTime indicates a timestamp could not be parsed
+	ErrInvalidDateTime = errors.New("could not parse timestamp")
+	// ErrNoContent indicates an empty response body was received from the API
+	ErrNoContent = errors.New("no content")
 )
 
+// Client is a logs client
 type Client struct {
 	opts       *Options
 	httpClient http.Client
 	output     *os.File
 }
 
-type Log struct {
+type log struct {
 	Time     time.Time `json:"time"`
 	Message  string    `json:"message"`
 	Hostname string    `json:"hostname"`
@@ -34,16 +39,17 @@ type Log struct {
 	Program  string    `json:"program"`
 }
 
-type PageInfo struct {
+type pageInfo struct {
 	PrevPage string `json:"prevPage"`
 	NextPage string `json:"nextPage"`
 }
 
-type GetLogsResponse struct {
-	Logs     []Log `json:"logs"`
-	PageInfo `json:"pageInfo"`
+type getLogsResponse struct {
+	Logs     []log `json:"logs"`
+	pageInfo `json:"pageInfo"`
 }
 
+// NewClient creates a new logs client
 func NewClient(opts *Options) (*Client, error) {
 	return &Client{
 		httpClient: *http.DefaultClient,
@@ -133,7 +139,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 	return request, nil
 }
 
-func (c *Client) printResult(logs []Log) error {
+func (c *Client) printResult(logs []log) error {
 	for _, l := range logs {
 		if c.opts.json {
 			log, err := json.Marshal(l)
@@ -141,16 +147,16 @@ func (c *Client) printResult(logs []Log) error {
 				return err
 			}
 
-			fmt.Fprintln(c.output, string(log))
+			_, _ = fmt.Fprintln(c.output, string(log))
 		} else {
-			fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
+			_, _ = fmt.Fprintf(c.output, "%s %s %s %s\n", l.Time.Format("Jan 02 15:04:05"), l.Hostname, l.Program, l.Message)
 		}
 	}
 
 	return nil
 }
 
-func (c *Client) getLogs(ctx context.Context, nextPage string) (*GetLogsResponse, error) {
+func (c *Client) getLogs(ctx context.Context, nextPage string) (*getLogsResponse, error) {
 	request, err := c.prepareRequest(ctx, nextPage)
 	if err != nil {
 		return nil, fmt.Errorf("error while preparing http request to SWO: %w", err)
@@ -172,7 +178,7 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*GetLogsResponse
 		return nil, fmt.Errorf("error while reading http response body from SWO: %w", err)
 	}
 
-	if !(response.StatusCode >= 200 && response.StatusCode < 300) {
+	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))
 	}
 
@@ -180,7 +186,7 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*GetLogsResponse
 		return nil, ErrNoContent
 	}
 
-	var logs GetLogsResponse
+	var logs getLogsResponse
 	err = json.Unmarshal(content, &logs)
 	if err != nil {
 		return nil, fmt.Errorf("error while unmarshaling http response body from SWO: %w", err)
@@ -189,6 +195,7 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*GetLogsResponse
 	return &logs, nil
 }
 
+// Run executes the logs retrieval and printing process
 func (c *Client) Run(ctx context.Context) error {
 	var nextPage string
 

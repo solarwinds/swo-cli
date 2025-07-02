@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/solarwinds/swo-cli/config"
 	"io"
 	"net"
 	"net/http"
@@ -16,13 +15,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/solarwinds/swo-cli/config"
+
 	"github.com/stretchr/testify/require"
 )
 
 var (
 	configFile = filepath.Join(os.TempDir(), "config-file.yaml")
-	logsData   = GetLogsResponse{
-		Logs: []Log{
+	logsData   = getLogsResponse{
+		Logs: []log{
 			{
 				Time:     time.Now(),
 				Message:  "messageOne",
@@ -38,7 +39,7 @@ var (
 				Program:  "programTwo",
 			},
 		},
-		PageInfo: PageInfo{PrevPage: "prevPageValue"},
+		pageInfo: pageInfo{PrevPage: "prevPageValue"},
 	}
 )
 

@@ -1,6 +1,7 @@
 #https://golangci-lint.run/usage/linters/
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     - ireturn
     - err113

@@ -73,7 +73,7 @@ func TestNewOptions(t *testing.T) {
 			require.Equal(t, &tc.expected, tc.opts)
 		})
 
-		os.Setenv("SWO_API_TOKEN", "")
+		_ = os.Setenv("SWO_API_TOKEN", "")
 	}
 }
 

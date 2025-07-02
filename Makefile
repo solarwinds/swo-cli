@@ -1,4 +1,4 @@
-golangci-lint-version = v1.60.3
+golangci-lint-version = v2.2.1
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
@@ -9,6 +9,4 @@ install-golangci-lint:
 
 .PHONY: ci-lint
 ci-lint: install-golangci-lint
-	GOOS=linux bin/golangci-lint run --timeout 2m
-	GOOS=windows bin/golangci-lint run --timeout 2m
-	GOOS=darwin bin/golangci-lint run --timeout 2m
+	bin/golangci-lint run --timeout 2m

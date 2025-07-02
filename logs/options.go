@@ -37,6 +37,7 @@ var (
 	}
 )
 
+// Options represents the command line options for the logs command
 type Options struct {
 	args       []string
 	configFile string
@@ -50,6 +51,7 @@ type Options struct {
 	APIURL     string
 }
 
+// Init initializes the options by parsing and validating the time flags
 func (opts *Options) Init(args []string) error {
 	opts.args = args
 
