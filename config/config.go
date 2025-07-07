@@ -1,20 +1,26 @@
+// Package config implements configuration loading and parsing
 package config
 
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
+
+	yaml "gopkg.in/yaml.v3"
 )
 
 const (
+	// DefaultConfigFile is the default path to the config file
 	DefaultConfigFile = "~/.swo-cli.yml"
-	DefaultAPIURL     = "https://api.na-01.cloud.solarwinds.com"
-	APIURLContextKey  = "api-url"
-	TokenContextKey   = "token"
+	// DefaultAPIURL is the default URL of the SWO API
+	DefaultAPIURL = "https://api.na-01.cloud.solarwinds.com"
+	// APIURLContextKey is the context key for the API URL
+	APIURLContextKey = "api-url"
+	// TokenContextKey is the context key for the API token
+	TokenContextKey = "token"
 )
 
 var (
@@ -22,14 +28,15 @@ var (
 	errMissingAPIURL = errors.New("failed to find API URL")
 )
 
+// Config represents the base configuration for the SWO CLI
 type Config struct {
 	APIURL string `yaml:"api-url"`
 	Token  string `yaml:"token"`
 }
 
-/*
- * Precedence: CLI flags, environment, config file
- */
+// Init initializes the configuration by loading from the specified config file,
+// environment variables, and command line flags.
+// Precedence: CLI flags, environment, config file
 func Init(configPath string, apiURL string, apiToken string) (*Config, error) {
 	config := &Config{
 		APIURL: apiURL,
@@ -52,6 +59,7 @@ func Init(configPath string, apiURL string, apiToken string) (*Config, error) {
 
 		configPath = filepath.Join(usr.HomeDir, configPath[2:])
 	}
+	configPath = filepath.Clean(configPath)
 
 	if content, err := os.ReadFile(configPath); err == nil {
 		err = yaml.Unmarshal(content, config)

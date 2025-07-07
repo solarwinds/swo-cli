@@ -2,10 +2,12 @@ package logs
 
 import (
 	"context"
+
 	"github.com/solarwinds/swo-cli/config"
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 )
 
+// Context keys for command line flags
 const (
 	ConfigContextKey  = "config"
 	GroupContextKey   = "group"
@@ -53,6 +55,7 @@ func runGet(cCtx *cli.Context) error {
 	return nil
 }
 
+// NewGetCommand creates a new 'logs get' command
 func NewGetCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "get",

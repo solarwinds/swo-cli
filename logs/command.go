@@ -1,9 +1,10 @@
 package logs
 
 import (
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 )
 
+// NewLogsCommand creates a new 'logs' command
 func NewLogsCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "logs",

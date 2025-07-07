@@ -2,9 +2,10 @@ package config
 
 import (
 	"errors"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func createConfigFile(t *testing.T, content string) string {
@@ -16,7 +17,7 @@ func createConfigFile(t *testing.T, content string) string {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		os.Remove(f.Name())
+		_ = os.Remove(f.Name())
 	})
 
 	return f.Name()
@@ -76,8 +77,8 @@ api-url: https://api.solarwinds.com
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			os.Setenv("SWO_API_TOKEN", "")
-			os.Setenv("SWO_API_URL", "")
+			_ = os.Setenv("SWO_API_TOKEN", "")
+			_ = os.Setenv("SWO_API_URL", "")
 
 			if tc.action != nil {
 				tc.action()
