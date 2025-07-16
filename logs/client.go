@@ -141,6 +141,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 
 func (c *Client) printResult(logs []log) error {
 	for _, l := range logs {
+		l.Time = l.Time.Local()
 		if c.opts.json {
 			log, err := json.Marshal(l)
 			if err != nil {
