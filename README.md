@@ -63,7 +63,7 @@ api-url: https://api.na-01.cloud.solarwinds.com
 ### Configuration Precedence
 
 Configuration values are loaded in the following order of precedence:
-1. Command line flags (`--token`, `--api-url`)
+1. Command line flags (`--api-token`, `--api-url`)
 2. Environment variables (`SWO_API_TOKEN`, `SWO_API_URL`)
 3. Configuration file (`~/.swo-cli.yml` or specified with `-c`)
 
