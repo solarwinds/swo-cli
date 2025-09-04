@@ -7,7 +7,13 @@ server logs from [SolarWinds Observability](https://www.solarwinds.com/solarwind
 
 Download the latest release from the [Releases](https://github.com/solarwinds/swo-cli/releases) page.
 
-Retrieve the full-access token from SolarWinds Observability and add it to `~/.swo-cli.yml`.
+Retrieve the full-access token from SolarWinds Observability and configure it using environment variables (recommended):
+
+    $ read -s SWO_API_TOKEN
+    $ export SWO_API_TOKEN
+    $ export SWO_API_URL="https://api.na-01.cloud.solarwinds.com"
+
+Alternatively, you can add it to a config file `~/.swo-cli.yml`:
 
     $ echo "token: 123456789012345678901234567890ab" > ~/.swo-cli.yml
     $ echo "api-url: https://api.na-01.cloud.solarwinds.com" >> ~/.swo-cli.yml
@@ -22,7 +28,26 @@ against the `swo` application:
 Retrieve your token from SolarWinds Observability (`Settings` -> `
 API Tokens` -> `Create API Token` -> `Full Access`).
 
-Create config file in your home directory `~/.swo-cli.yml` 
+### Environment Variables (Recommended)
+
+The preferred and most secure way to configure the SWO CLI is using environment variables:
+
+- `SWO_API_TOKEN` - Your SolarWinds Observability API token
+- `SWO_API_URL` - The API URL (defaults to https://api.na-01.cloud.solarwinds.com)
+
+To configure securely, use the `read` command to avoid exposing your token in shell history:
+
+```bash
+# Set the API token securely (token won't appear in shell history)
+read -s -p "SWO_API_TOKEN:" SWO_API_TOKEN
+
+# Optionally set a custom API URL
+export SWO_API_URL="https://api.na-01.cloud.solarwinds.com"
+```
+
+### Configuration File (Alternative)
+
+Alternatively, create a config file in your home directory `~/.swo-cli.yml` 
 containing your full-access API token and API URL, 
 or create file in the directory of your choosing and use 
 option `-c /path/to/swo-cli-home.yml` at runtime. 
@@ -31,6 +56,13 @@ Example file:
 
     token: 123456789012345678901234567890ab
     api-url: https://api.na-01.cloud.solarwinds.com
+
+### Configuration Precedence
+
+Configuration values are loaded in the following order of precedence:
+1. Command line flags (`--token`, `--api-url`)
+2. Environment variables (`SWO_API_TOKEN`, `SWO_API_URL`)
+3. Configuration file (`~/.swo-cli.yml` or specified with `-c`)
 
 ## Usage & Examples
 
@@ -161,12 +193,29 @@ even though one is for 4 words (AND) while the other is for a phrase:
 ### Multiple API tokens
 
 To use multiple API tokens (such as for separate home and work SolarWinds Observability
-accounts), create a `.swo-cli.yml` configuration file in each project's
+accounts), you have several options:
+
+**Using environment variables with shell functions:**
+
+```bash
+# Create shell functions for different environments
+function swo-home() {
+    SWO_API_TOKEN="your_home_token" SWO_API_URL="https://api.na-01.cloud.solarwinds.com" swo "$@"
+}
+
+function swo-work() {
+    SWO_API_TOKEN="your_work_token" SWO_API_URL="https://api.eu-01.cloud.solarwinds.com" swo "$@"
+}
+```
+
+**Using configuration files:**
+
+Create a `.swo-cli.yml` configuration file in each project's
 working directory and invoke the CLI in that directory. The CLI checks for
 `.swo-cli.yml` in the current working directory prior to using
 `~/.swo-cli.yml`.
 
-Alternatively, use shell aliases with different `-c` paths. For example:
+Alternatively, use shell aliases with different `-c` paths:
 
     echo "alias swo1='swo logs get -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
     echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
