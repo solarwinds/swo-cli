@@ -1,5 +1,10 @@
 golangci-lint-version = v2.2.1
 
+.PHONY: build
+build:
+	go build -o swo ./cmd/swo
+	chmod +x swo
+
 .PHONY: install-golangci-lint
 install-golangci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh >lint-install.sh
