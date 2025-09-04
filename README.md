@@ -40,6 +40,7 @@ To configure securely, use the `read` command to avoid exposing your token in sh
 ```bash
 # Set the API token securely (token won't appear in shell history)
 read -s -p "SWO_API_TOKEN:" SWO_API_TOKEN
+export SWO_API_TOKEN
 
 # Optionally set a custom API URL
 export SWO_API_URL="https://api.na-01.cloud.solarwinds.com"
@@ -54,8 +55,10 @@ option `-c /path/to/swo-cli-home.yml` at runtime.
 
 Example file:
 
-    token: 123456789012345678901234567890ab
-    api-url: https://api.na-01.cloud.solarwinds.com
+```text
+token: 123456789012345678901234567890ab
+api-url: https://api.na-01.cloud.solarwinds.com
+```
 
 ### Configuration Precedence
 
