@@ -16,7 +16,7 @@ var (
 
 // Options represents the command line options for the entities command
 type Options struct {
-	shared.BaseOptions        // Embedded base options (Verbose, Token, APIURL)
+	shared.BaseOptions // Embedded base options (Verbose, Token, APIURL)
 	ID                 string
 	Type               string
 	Name               string

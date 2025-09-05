@@ -40,15 +40,15 @@ var (
 
 // Options represents the command line options for the logs command
 type Options struct {
-	shared.BaseOptions        // Embedded base options (Verbose, Token, APIURL)
-	args           []string
-	configFile     string
-	group          string
-	system         string
-	maxTime        string
-	minTime        string
-	json           bool
-	follow         bool
+	shared.BaseOptions // Embedded base options (Verbose, Token, APIURL)
+	args               []string
+	configFile         string
+	group              string
+	system             string
+	maxTime            string
+	minTime            string
+	json               bool
+	follow             bool
 }
 
 // Init initializes the options by parsing and validating the time flags
