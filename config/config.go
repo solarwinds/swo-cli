@@ -20,7 +20,7 @@ const (
 	// APIURLContextKey is the context key for the API URL
 	APIURLContextKey = "api-url"
 	// TokenContextKey is the context key for the API token
-	TokenContextKey = "token"
+	TokenContextKey = "api-token"
 )
 
 var (
@@ -38,50 +38,63 @@ type Config struct {
 // environment variables, and command line flags.
 // Precedence: CLI flags, environment, config file
 func Init(configPath string, apiURL string, apiToken string) (*Config, error) {
+	// initialize values from CMD line
 	config := &Config{
-		APIURL: apiURL,
-		Token:  apiToken,
+		APIURL: strings.TrimSpace(apiURL),
+		Token:  strings.TrimSpace(apiToken),
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
+	// if empty, try ENV variables
+	if config.APIURL == "" {
+		config.APIURL = strings.TrimSpace(os.Getenv("SWO_API_URL"))
+	}
+	if config.Token == "" {
+		config.Token = strings.TrimSpace(os.Getenv("SWO_API_TOKEN"))
 	}
 
-	localConfig := filepath.Join(cwd, ".swo-cli.yaml")
-	if _, err := os.Stat(localConfig); err == nil {
-		configPath = localConfig
-	} else if strings.HasPrefix(configPath, "~/") {
-		usr, err := user.Current()
+	if config.APIURL == "" || config.Token == "" {
+		cwd, err := os.Getwd()
 		if err != nil {
-			return nil, fmt.Errorf("error while resolving current user to read configuration file: %w", err)
+			return nil, err
 		}
 
-		configPath = filepath.Join(usr.HomeDir, configPath[2:])
-	}
-	configPath = filepath.Clean(configPath)
+		localConfig := filepath.Join(cwd, ".swo-cli.yaml")
+		if _, err := os.Stat(localConfig); err == nil {
+			configPath = localConfig
+		} else if strings.HasPrefix(configPath, "~/") {
+			usr, err := user.Current()
+			if err != nil {
+				return nil, fmt.Errorf("error while resolving current user to read configuration file: %w", err)
+			}
 
-	if content, err := os.ReadFile(configPath); err == nil {
-		err = yaml.Unmarshal(content, config)
-		if err != nil {
-			return nil, fmt.Errorf("error while unmarshaling %s config file: %w", configPath, err)
+			configPath = filepath.Join(usr.HomeDir, configPath[2:])
 		}
+		configPath = filepath.Clean(configPath)
+
+		configFromFile := &Config{}
+		if content, err := os.ReadFile(configPath); err == nil {
+			err = yaml.Unmarshal(content, configFromFile)
+			if err != nil {
+				return nil, fmt.Errorf("error while unmarshaling %s config file: %w", configPath, err)
+			}
+		}
+
+		if config.APIURL == "" {
+			config.APIURL = strings.TrimSpace(configFromFile.APIURL)
+		}
+
+		if config.Token == "" {
+			config.Token = strings.TrimSpace(configFromFile.Token)
+		}
+
 	}
 
-	if token := os.Getenv("SWO_API_TOKEN"); token != "" {
-		config.Token = token
-	}
-
-	if url := os.Getenv("SWO_API_URL"); url != "" {
-		config.APIURL = url
+	if config.APIURL == "" {
+		config.APIURL = DefaultAPIURL
 	}
 
 	if config.Token == "" {
 		return nil, errMissingToken
-	}
-
-	if config.APIURL == "" {
-		return nil, errMissingAPIURL
 	}
 
 	return config, nil
