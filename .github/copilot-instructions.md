@@ -81,7 +81,7 @@ api-url: https://api.na-01.cloud.solarwinds.com
 ### Build Commands
 ```bash
 make build                    # Build the swo binary
-make ci-lint                  # Run golangci-lint
+make lint                     # Run golangci-lint
 make test                     # Run all tests
 go test ./config              # Run tests for a single package
 ```
@@ -153,7 +153,7 @@ type Config struct {
 4. **Maintain backward compatibility** for configuration and CLI
 5. **Document new environment variables** in README.md
 6. **Use `make test`** for local testing
-7. **Run `make ci-lint`** before committing
+7. **Run `make lint`** before committing. If any issues found, ask user to run fix-lint prompt
 8. **Test with both environment variables and config files**
 
 ## Important Notes for Copilot

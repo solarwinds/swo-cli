@@ -11,6 +11,8 @@ sudo chown -R vscode:vscode "$GOCACHE" "$GOMODCACHE" "$GOPATH"
 
 # Install any additional Go tools if needed
 go install -a std
+go install golang.org/x/tools/cmd/goimports@latest 
+
 # get all packages
 go get ./...
 
