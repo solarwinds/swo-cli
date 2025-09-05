@@ -7,7 +7,7 @@ build:
 
 .PHONY: build
 test:
-	go test ./config ./logs
+	go test ./...
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
