@@ -28,7 +28,7 @@ func main() {
 			logs.NewLogsCommand(),
 		},
 		Before: func(cCtx *cli.Context) error {
-			cfg, err := config.Init(cCtx.String("config"), cCtx.String("api-url"), cCtx.String("api-token"))
+			cfg, err := config.Init(cCtx.String("config"), cCtx.String(config.APIURLContextKey), cCtx.String(config.TokenContextKey))
 			if err != nil {
 				return err
 			}
