@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/solarwinds/swo-cli/config"
+	"github.com/solarwinds/swo-cli/shared"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -37,8 +38,11 @@ func runGet(cCtx *cli.Context) error {
 		minTime:    cCtx.String(MinTimeContextKey),
 		json:       cCtx.Bool(JSONContextKey),
 		follow:     cCtx.Bool(FollowContextKey),
-		APIURL:     cCtx.String(config.APIURLContextKey),
-		Token:      cCtx.String(config.TokenContextKey),
+		BaseOptions: shared.BaseOptions{
+			Verbose: cCtx.Bool("verbose"),
+			APIURL:  cCtx.String(config.APIURLContextKey),
+			Token:   cCtx.String(config.TokenContextKey),
+		},
 	}
 	if err := opts.Init(cCtx.Args().Slice()); err != nil {
 		return err
