@@ -5,6 +5,10 @@ build:
 	go build -o swo ./cmd/swo
 	chmod +x swo
 
+.PHONY: build
+test:
+	go test ./config ./logs
+
 .PHONY: install-golangci-lint
 install-golangci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh >lint-install.sh
