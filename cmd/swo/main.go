@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/solarwinds/swo-cli/config"
+	"github.com/solarwinds/swo-cli/entities"
 
 	"github.com/solarwinds/swo-cli/logs"
 	cli "github.com/urfave/cli/v2"
@@ -27,6 +28,7 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			logs.NewLogsCommand(),
+			entities.NewEntitiesCommand(),
 		},
 		Before: func(cCtx *cli.Context) error {
 			// Only pass CLI values if they were explicitly set by the user
