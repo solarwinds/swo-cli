@@ -7,34 +7,63 @@ server logs from [SolarWinds Observability](https://www.solarwinds.com/solarwind
 
 Download the latest release from the [Releases](https://github.com/solarwinds/swo-cli/releases) page.
 
-Retrieve the full-access token from SolarWinds Observability and add it to `~/.swo-cli.yml`.
+Retrieve the full-access token from SolarWinds Observability and configure it using environment variables (recommended):
 
-    $ echo "token: 123456789012345678901234567890ab" > ~/.swo-cli.yml
-    $ echo "api-url: https://api.na-01.cloud.solarwinds.com" >> ~/.swo-cli.yml
+```bash
+read -s -p "SWO_API_TOKEN:" SWO_API_TOKEN
+export SWO_API_TOKEN # export it for child processes
+export SWO_API_URL="https://api.na-01.cloud.solarwinds.com"
+```
+
+Alternatively, you can add it to a config file `~/.swo-cli.yml`:
+
+```bash
+read -s -p "token:" token
+echo "token: $token" > ~/.swo-cli.yml
+echo "api-url: https://api.na-01.cloud.solarwinds.com" >> ~/.swo-cli.yml
+```
 
 From a command line, navigate into the folder, and execute commands 
 against the `swo` application:
-   - Windows: `> .\swo.exe --help`
-   - macOS/Linux: `$ ./swo --help`
+   - Windows: `.\swo.exe --help`
+   - macOS/Linux: `./swo --help`
 
 ## Configuration
 
 Retrieve your token from SolarWinds Observability (`Settings` -> `
 API Tokens` -> `Create API Token` -> `Full Access`).
 
-Create config file in your home directory `~/.swo-cli.yml` 
+### Environment Variables (Recommended)
+
+The preferred and most secure way to configure the SWO CLI is using environment variables:
+
+- `SWO_API_TOKEN` - Your SolarWinds Observability API token
+- `SWO_API_URL` - The API URL (defaults to https://api.na-01.cloud.solarwinds.com)
+
+### Configuration File (Alternative)
+
+Ceate a config file in your home directory `~/.swo-cli.yml` 
 containing your full-access API token and API URL, 
 or create file in the directory of your choosing and use 
 option `-c /path/to/swo-cli-home.yml` at runtime. 
 
 Example file:
 
-    token: 123456789012345678901234567890ab
-    api-url: https://api.na-01.cloud.solarwinds.com
+```text
+token: 123456789012345678901234567890ab
+api-url: https://api.na-01.cloud.solarwinds.com
+```
+
+### Configuration Precedence
+
+Configuration values are loaded in the following order of precedence:
+1. Command line flags (`--api-token`, `--api-url`)
+2. Environment variables (`SWO_API_TOKEN`, `SWO_API_URL`)
+3. Configuration file (`~/.swo-cli.yml` or specified with `-c`)
 
 ## Usage & Examples
 
-```
+```bash
 $ swo --help
 
 NAME:
@@ -63,22 +92,28 @@ GLOBAL OPTIONS:
 To count the number of matches, pipe to `wc -l`. For example, count how
 many logs contained `Failure` in the last minute:
 
-    $ swo logs get --min-time '1 minute ago' Failure | wc -l
-    42
+```bash
+swo logs get --min-time '1 minute ago' Failure | wc -l
+42
+```
 
 Output only the program/file name (which is output as field 5):
 
-    $ swo logs get --min-time '1 minute ago' | cut -f 5 -d ' '
-    passenger.log:
-    sshd:
-    app/web.2:
+```bash
+swo logs get --min-time '1 minute ago' | cut -f 5 -d ' '
+passenger.log:
+sshd:
+app/web.2:
+```
 
 Count by source/system name (field 4):
 
-    $ swo logs get --min-time '1 minute ago' | cut -f 4 -d ' ' | sort | uniq -c
-      98 www42
-      39 acmedb-core01
-      2 fastly
+```bash
+swo logs get --min-time '1 minute ago' | cut -f 4 -d ' ' | sort | uniq -c
+98 www42
+39 acmedb-core01
+2 fastly
+```
 
 For sum, mean, and statistics, see
 [datamash](http://www.gnu.org/software/datamash/) and [one-liners](https://www.gnu.org/software/datamash/alternatives/).
@@ -92,27 +127,35 @@ For content-based colorization, pipe through [lnav]. Install `lnav` from your
 preferred package repository, such as `brew install lnav` or
 `apt-get install lnav`, then:
 
-    $ swo logs get | lnav
-    $ swo logs get --min-time "1 hour ago" error | lnav
+```bash
+swo logs get | lnav
+swo logs get --min-time "1 hour ago" error | lnav
+```
 
 ### Redirecting output
 
 Since output is line-buffered, pipes and output redirection will automatically
 work:
 
-    $ swo logs get | less
-    $ swo logs get --min-time '2016-01-15 10:00:00' > logs.txt
+```bash
+swo logs get | less
+swo logs get --min-time '2016-01-15 10:00:00' > logs.txt
+```
 
 If you frequently pipe output to a certain command, create a function which
 accepts optional arguments, invokes `swo` with any arguments, and pipes
 output to that command. For example, this `swocolor` function will pipe to `lnav`:
 
-    $ function swocolor() { swo logs -f $* | lnav; }
+```bash
+function swocolor() { swo logs -f $* | lnav; }
+```
 
 Add the `function` line to your `~/.bashrc`. It can be invoked with search
 parameters:
 
-    $ swocolor 1.2.3 Failure
+```bash
+swocolor 1.2.3 Failure
+```
 
 ### Negation-only queries
 
@@ -122,7 +165,9 @@ Usually this is moot because most searches start with a positive match.
 To search only for log messages without a given string, use `--`. For
 example, to search for `-whatever`, run:
 
-    swo logs get -- -whatever
+```bash
+swo logs get -- -whatever
+```
 
 ### Time zones
 
@@ -134,7 +179,9 @@ When providing absolute times, append `UTC` to provide the input time in
 UTC. For example, regardless of the local PC time zone, this will show
 messages beginning from 1 PM UTC:
 
-    swo logs get --min-time "2024-04-27 13:00:00 UTC"
+```bash
+swo logs get --min-time "2024-04-27 13:00:00 UTC"
+```
 
 Output timestamps will still be in the local PC time zone.
 
@@ -144,7 +191,9 @@ Because the Unix shell parses and strips one set of quotes around a
 phrase, to search for a phrase, wrap the string in both single-quotes
 and double-quotes. For example:
 
-    swo logs get '"Connection reset by peer"'
+```bash
+swo logs get '"Connection reset by peer"'
+```
 
 Use one set of double-quotes and one set of single-quotes. The order
 does not matter as long as the pairs are consistent.
@@ -155,8 +204,10 @@ result, quoting strings twice is often not actually necessary. For
 example, these two searches are likely to yield the same log messages,
 even though one is for 4 words (AND) while the other is for a phrase:
 
-    swo logs get Connection reset by peer
-    swo logs get '"Connection reset by peer"'
+```bash
+swo logs get Connection reset by peer
+swo logs get '"Connection reset by peer"'
+```
 
 ### Multiple API tokens
 
@@ -166,11 +217,12 @@ working directory and invoke the CLI in that directory. The CLI checks for
 `.swo-cli.yml` in the current working directory prior to using
 `~/.swo-cli.yml`.
 
-Alternatively, use shell aliases with different `-c` paths. For example:
+Alternatively, use shell aliases with different `-c` paths:
 
-    echo "alias swo1='swo logs get -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
-    echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
-
+```bash
+echo "alias swo1='swo logs get -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
+echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
+```
 
 ## Development & Contribute
 
@@ -189,8 +241,8 @@ Alternatively, use shell aliases with different `-c` paths. For example:
 ### Testing:
 
 1. Run all the tests with `go test -v -count=1 ./...`
-2. Run go linter with `make ci-lint`
-
+2. Run go linter with `make lint`
+  - You may try to fix the issues found by `make fix-lint` or ask Copilot to help you (there is a `fix-lint` prompt)
 ### Bug report:
 
 1. See whether the issue has already been reported:

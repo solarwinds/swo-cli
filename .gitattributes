@@ -1,0 +1,46 @@
+# Auto detect text files and perform LF normalization
+# https://www.davidlaing.com/2012/09/19/customise-your-gitattributes-to-become-a-git-ninja/
+
+# Default behavior: normalize line endings to LF on checkin
+* text=auto
+
+# Go source files
+*.go text eol=lf diff=golang
+
+# Go module files
+go.mod text eol=lf
+go.sum text eol=lf
+
+# Shell scripts (always LF)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Documentation and configuration files
+*.md text eol=lf diff=markdown
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+
+# Makefiles (tabs are important)
+Makefile text eol=lf
+*.mk text eol=lf
+
+# License and security files
+LICENSE text eol=lf
+SECURITY.md text eol=lf
+README.md text eol=lf
+
+# Binary files
+*.exe binary
+*.so binary
+*.dylib binary
+*.dll binary
+*.a binary
+
+# Archives
+*.tar binary
+*.gz binary
+*.zip binary
+*.7z binary
+

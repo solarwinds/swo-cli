@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/solarwinds/swo-cli/config"
+	"github.com/solarwinds/swo-cli/entities"
 
 	"github.com/solarwinds/swo-cli/logs"
 	cli "github.com/urfave/cli/v2"
@@ -23,12 +24,23 @@ func main() {
 			&cli.StringFlag{Name: config.APIURLContextKey, Usage: "URL of the SWO API", Value: config.DefaultAPIURL},
 			&cli.StringFlag{Name: config.TokenContextKey, Usage: "API token"},
 			&cli.StringFlag{Name: "config", Aliases: []string{"c"}, Usage: "path to config", Value: config.DefaultConfigFile},
+			&cli.BoolFlag{Name: "verbose", Usage: "enable verbose output (shows API URLs and debug info)"},
 		},
 		Commands: []*cli.Command{
 			logs.NewLogsCommand(),
+			entities.NewEntitiesCommand(),
 		},
 		Before: func(cCtx *cli.Context) error {
-			cfg, err := config.Init(cCtx.String("config"), cCtx.String("api-url"), cCtx.String("api-token"))
+			// Only pass CLI values if they were explicitly set by the user
+			var apiURL, apiToken string
+			if cCtx.IsSet(config.APIURLContextKey) {
+				apiURL = cCtx.String(config.APIURLContextKey)
+			}
+			if cCtx.IsSet(config.TokenContextKey) {
+				apiToken = cCtx.String(config.TokenContextKey)
+			}
+
+			cfg, err := config.Init(cCtx.String("config"), apiURL, apiToken)
 			if err != nil {
 				return err
 			}
