@@ -12,6 +12,7 @@ var (
 	errMissingEntityID   = errors.New("entity ID is required")
 	errMissingEntityType = errors.New("entity type is required")
 	errInvalidTag        = errors.New("invalid tag format, expected key=value")
+	errAtLeastOneTag     = errors.New("at least one tag is required for update")
 )
 
 // Options represents the command line options for the entities command
@@ -50,7 +51,7 @@ func (o *Options) ParseTags(tagStrings []string) error {
 	return nil
 }
 
-// Validate validates the options for different operations
+// ValidateForGet validates the options for get operations
 func (o *Options) ValidateForGet() error {
 	if strings.TrimSpace(o.ID) == "" {
 		return errMissingEntityID
@@ -72,7 +73,7 @@ func (o *Options) ValidateForUpdate() error {
 		return errMissingEntityID
 	}
 	if len(o.Tags) == 0 {
-		return errors.New("at least one tag is required for update")
+		return errAtLeastOneTag
 	}
 	return nil
 }

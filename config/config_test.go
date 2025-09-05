@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	errUnmarshalingYAML = errors.New("error while unmarshaling")
+)
+
 func createConfigFile(t *testing.T, content string) string {
 	f, err := os.CreateTemp(os.TempDir(), "swo-config-test")
 	require.NoError(t, err, "creating a temporary file should not fail")
@@ -370,7 +374,7 @@ api-url: [invalid yaml structure
 `
 				return createConfigFile(t, yamlStr)
 			}(),
-			expectedError: errors.New("error while unmarshaling"), // This will be wrapped, so we'll check with Contains
+			expectedError: errUnmarshalingYAML, // This will be wrapped, so we'll check with Contains
 		},
 	}
 
@@ -385,15 +389,16 @@ api-url: [invalid yaml structure
 
 			cfg, err := Init(tc.configFile, tc.apiURL, tc.token)
 
-			if tc.name == "invalid YAML config file" {
+			switch tc.name {
+			case "invalid YAML config file":
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "error while unmarshaling")
 				require.Nil(t, cfg)
-			} else if tc.name == "missing API URL uses default" {
+			case "missing API URL uses default":
 				require.NoError(t, err)
 				require.Equal(t, DefaultAPIURL, cfg.APIURL)
 				require.Equal(t, "test_token", cfg.Token)
-			} else {
+			default:
 				require.True(t, errors.Is(err, tc.expectedError), "error: %v, expected: %v", err, tc.expectedError)
 				require.Nil(t, cfg)
 			}

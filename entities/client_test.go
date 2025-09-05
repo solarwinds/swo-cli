@@ -344,7 +344,10 @@ func TestListEntities(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Errorf("Failed to encode response: %v", err)
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -362,8 +365,16 @@ func TestListEntities(t *testing.T) {
 	// Capture output
 	tempFile, err := os.CreateTemp("", "test-output")
 	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to cleanup temp file: %v", err)
+		}
+	}()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			t.Logf("Failed to close temp file: %v", err)
+		}
+	}()
 
 	client.output = tempFile
 
@@ -389,7 +400,10 @@ func TestGetEntity(t *testing.T) {
 		require.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(testEntities[0])
+		if err := json.NewEncoder(w).Encode(testEntities[0]); err != nil {
+			t.Errorf("Failed to encode response: %v", err)
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -407,8 +421,16 @@ func TestGetEntity(t *testing.T) {
 	// Capture output
 	tempFile, err := os.CreateTemp("", "test-output")
 	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to cleanup temp file: %v", err)
+		}
+	}()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			t.Logf("Failed to close temp file: %v", err)
+		}
+	}()
 
 	client.output = tempFile
 
@@ -434,12 +456,16 @@ func TestUpdateEntity(t *testing.T) {
 
 	// Create mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		switch r.Method {
+		case "GET":
 			getRequest = r
 			require.Equal(t, "/v1/entities/e-1234567890", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(testEntities[0])
-		} else if r.Method == "PUT" {
+			if err := json.NewEncoder(w).Encode(testEntities[0]); err != nil {
+				t.Errorf("Failed to encode response: %v", err)
+				return
+			}
+		case "PUT":
 			putRequest = r
 			require.Equal(t, "/v1/entities/e-1234567890", r.URL.Path)
 			w.WriteHeader(http.StatusAccepted)
@@ -462,8 +488,16 @@ func TestUpdateEntity(t *testing.T) {
 	// Capture output
 	tempFile, err := os.CreateTemp("", "test-output")
 	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to cleanup temp file: %v", err)
+		}
+	}()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			t.Logf("Failed to close temp file: %v", err)
+		}
+	}()
 
 	client.output = tempFile
 
@@ -492,7 +526,10 @@ func TestListTypes(t *testing.T) {
 
 		response := listTypesResponse{Types: testTypes}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Errorf("Failed to encode response: %v", err)
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -509,8 +546,16 @@ func TestListTypes(t *testing.T) {
 	// Capture output
 	tempFile, err := os.CreateTemp("", "test-output")
 	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to cleanup temp file: %v", err)
+		}
+	}()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			t.Logf("Failed to close temp file: %v", err)
+		}
+	}()
 
 	client.output = tempFile
 
@@ -531,13 +576,16 @@ func TestListTypes(t *testing.T) {
 
 func TestJSONOutput(t *testing.T) {
 	// Test JSON output for ListEntities
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		response := listEntitiesResponse{
 			Entities: testEntities[:1], // Just one entity for simpler testing
 			pageInfo: pageInfo{NextPage: ""},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			t.Errorf("Failed to encode response: %v", err)
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -555,8 +603,16 @@ func TestJSONOutput(t *testing.T) {
 	// Capture output
 	tempFile, err := os.CreateTemp("", "test-output")
 	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
+	defer func() {
+		if err := os.Remove(tempFile.Name()); err != nil && !os.IsNotExist(err) {
+			t.Logf("Failed to cleanup temp file: %v", err)
+		}
+	}()
+	defer func() {
+		if err := tempFile.Close(); err != nil {
+			t.Logf("Failed to close temp file: %v", err)
+		}
+	}()
 
 	client.output = tempFile
 
@@ -579,9 +635,12 @@ func TestJSONOutput(t *testing.T) {
 
 func TestErrorHandling(t *testing.T) {
 	// Test API error response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		if _, err := w.Write([]byte("Unauthorized")); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+			return
+		}
 	}))
 	defer server.Close()
 
