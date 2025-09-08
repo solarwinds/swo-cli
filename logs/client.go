@@ -31,7 +31,6 @@ type Client struct {
 	opts       *Options
 	httpClient http.Client
 	output     *os.File
-	logger     *shared.VerboseLogger
 }
 
 type log struct {
@@ -54,11 +53,13 @@ type getLogsResponse struct {
 
 // NewClient creates a new logs client
 func NewClient(opts *Options) (*Client, error) {
+	// Configure logging based on verbose flag
+	shared.SetupLogger(opts.Verbose)
+
 	return &Client{
 		httpClient: *http.DefaultClient,
 		opts:       opts,
 		output:     os.Stdout,
-		logger:     shared.NewVerboseLogger(opts.Verbose),
 	}, nil
 }
 
@@ -133,7 +134,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 
 	logsURL.RawQuery = params.Encode()
 
-	c.logger.Log("API Request: GET %s", logsURL.String())
+	slog.Debug("API Request", "method", "GET", "url", logsURL.String())
 
 	request, err := http.NewRequestWithContext(ctx, "GET", logsURL.String(), nil)
 	if err != nil {
@@ -181,14 +182,14 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*getLogsResponse
 		}
 	}()
 
-	c.logger.Log("Response status: %d %s", response.StatusCode, response.Status)
+	slog.Debug("Response status", "status_code", response.StatusCode, "status", response.Status)
 
 	content, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading http response body from SWO: %w", err)
 	}
 
-	c.logger.Log("Response body length: %d bytes", len(content))
+	slog.Debug("Response body", "length_bytes", len(content))
 
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))

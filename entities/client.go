@@ -34,7 +34,6 @@ type Client struct {
 	opts       *Options
 	httpClient http.Client
 	output     *os.File
-	logger     *shared.VerboseLogger
 }
 
 // Entity represents an entity from the SWO API
@@ -67,11 +66,13 @@ type listTypesResponse struct {
 
 // NewClient creates a new entities client
 func NewClient(opts *Options) (*Client, error) {
+	// Configure logging based on verbose flag
+	shared.SetupLogger(opts.Verbose)
+
 	return &Client{
 		httpClient: *http.DefaultClient,
 		opts:       opts,
 		output:     os.Stdout,
-		logger:     shared.NewVerboseLogger(opts.Verbose),
 	}, nil
 }
 
@@ -119,8 +120,6 @@ func (c *Client) prepareListRequest(ctx context.Context, nextPage string) (*http
 
 	entitiesURL.RawQuery = params.Encode()
 
-	c.logger.Log("API Request: GET %s", entitiesURL.String())
-
 	request, err := http.NewRequestWithContext(ctx, "GET", entitiesURL.String(), nil)
 	if err != nil {
 		return nil, err
@@ -137,8 +136,6 @@ func (c *Client) prepareGetRequest(ctx context.Context) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	c.logger.Log("API Request: GET %s", endpoint)
 
 	request, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
 	if err != nil {
@@ -170,9 +167,6 @@ func (c *Client) prepareUpdateRequest(ctx context.Context, entity *Entity) (*htt
 		return nil, fmt.Errorf("failed to marshal entity data: %w", err)
 	}
 
-	c.logger.Log("API Request: PUT %s", endpoint)
-	c.logger.Log("Request body: %s", string(jsonData))
-
 	request, err := http.NewRequestWithContext(ctx, "PUT", endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
@@ -191,8 +185,6 @@ func (c *Client) prepareListTypesRequest(ctx context.Context) (*http.Request, er
 		return nil, err
 	}
 
-	c.logger.Log("API Request: GET %s", endpoint)
-
 	request, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -205,7 +197,7 @@ func (c *Client) prepareListTypesRequest(ctx context.Context) (*http.Request, er
 }
 
 func (c *Client) doRequest(req *http.Request) ([]byte, error) {
-	c.logger.Log("Sending %s request to %s", req.Method, req.URL.String())
+	slog.Debug("Sending HTTP request", "method", req.Method, "url", req.URL.String())
 
 	response, err := c.httpClient.Do(req)
 	if err != nil {
@@ -218,14 +210,14 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 		}
 	}()
 
-	c.logger.Log("Response status: %d %s", response.StatusCode, response.Status)
+	slog.Debug("Response status", "status_code", response.StatusCode, "status", response.Status)
 
 	content, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading http response body from SWO: %w", err)
 	}
 
-	c.logger.Log("Response body length: %d bytes", len(content))
+	slog.Debug("Response body", "length_bytes", len(content))
 
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))

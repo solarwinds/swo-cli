@@ -2,7 +2,7 @@
 package shared
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 )
 
@@ -13,24 +13,16 @@ type BaseOptions struct {
 	APIURL  string // API URL for requests
 }
 
-// VerboseLogger provides verbose logging functionality
-type VerboseLogger struct {
-	enabled bool
-}
-
-// NewVerboseLogger creates a new verbose logger
-func NewVerboseLogger(enabled bool) *VerboseLogger {
-	return &VerboseLogger{enabled: enabled}
-}
-
-// Log prints debug information when verbose mode is enabled
-func (v *VerboseLogger) Log(format string, args ...interface{}) {
-	if v.enabled {
-		_, _ = fmt.Fprintf(os.Stderr, "[VERBOSE] "+format+"\n", args...)
+// SetupLogger configures the global slog logger based on verbose flag
+func SetupLogger(verbose bool) {
+	level := slog.LevelInfo
+	if verbose {
+		level = slog.LevelDebug
 	}
-}
 
-// IsEnabled returns whether verbose logging is enabled
-func (v *VerboseLogger) IsEnabled() bool {
-	return v.enabled
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: level,
+	})
+
+	slog.SetDefault(slog.New(handler))
 }
