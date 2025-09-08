@@ -3,6 +3,7 @@ package entities
 import (
 	"context"
 
+	"github.com/solarwinds/swo-cli/config"
 	"github.com/urfave/cli/v2"
 )
 
@@ -13,8 +14,8 @@ func runList(ctx *cli.Context) error {
 	opts.PageSize = ctx.Int("page-size")
 	opts.JSON = ctx.Bool("json")
 	opts.Verbose = ctx.Bool("verbose")
-	opts.Token = ctx.String("api-token")
-	opts.APIURL = ctx.String("api-url")
+	opts.Token = ctx.String(config.TokenContextKey)
+	opts.APIURL = ctx.String(config.APIURLContextKey)
 
 	if err := opts.ValidateForList(); err != nil {
 		return err
