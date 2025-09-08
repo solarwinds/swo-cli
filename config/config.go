@@ -21,11 +21,12 @@ const (
 	APIURLContextKey = "api-url"
 	// TokenContextKey is the context key for the API token
 	TokenContextKey = "api-token"
+	// VerboseContextKey is the context key for verbose output
+	VerboseContextKey = "verbose"
 )
 
 var (
-	errMissingToken  = errors.New("failed to find token")
-	errMissingAPIURL = errors.New("failed to find API URL")
+	errMissingToken = errors.New("failed to find token")
 )
 
 // Config represents the base configuration for the SWO CLI

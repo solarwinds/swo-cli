@@ -39,7 +39,7 @@ func runGet(cCtx *cli.Context) error {
 		json:       cCtx.Bool(JSONContextKey),
 		follow:     cCtx.Bool(FollowContextKey),
 		BaseOptions: shared.BaseOptions{
-			Verbose: cCtx.Bool("verbose"),
+			Verbose: cCtx.Bool(config.VerboseContextKey),
 			APIURL:  cCtx.String(config.APIURLContextKey),
 			Token:   cCtx.String(config.TokenContextKey),
 		},
