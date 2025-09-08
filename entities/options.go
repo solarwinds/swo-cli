@@ -21,7 +21,6 @@ type Options struct {
 	ID                 string
 	Type               string
 	Name               string
-	PageSize           int
 	Tags               map[string]string
 	JSON               bool
 }

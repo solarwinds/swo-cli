@@ -11,7 +11,6 @@ func runList(ctx *cli.Context) error {
 	opts := NewOptions()
 	opts.Type = ctx.String("type")
 	opts.Name = ctx.String("name")
-	opts.PageSize = ctx.Int("page-size")
 	opts.JSON = ctx.Bool("json")
 	opts.Verbose = ctx.Bool(config.VerboseContextKey)
 	opts.Token = ctx.String(config.TokenContextKey)

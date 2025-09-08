@@ -26,12 +26,6 @@ func NewEntitiesCommand() *cli.Command {
 						Aliases: []string{"n"},
 						Usage:   "Filter entities by name",
 					},
-					&cli.IntFlag{
-						Name:    "page-size",
-						Aliases: []string{"s"},
-						Usage:   "Number of entities per page",
-						Value:   100,
-					},
 					&cli.BoolFlag{
 						Name:    "json",
 						Aliases: []string{"j"},
@@ -63,6 +57,7 @@ func NewEntitiesCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "id",
+						Aliases:  []string{"id"},
 						Usage:    "Entity ID (required)",
 						Required: true,
 					},

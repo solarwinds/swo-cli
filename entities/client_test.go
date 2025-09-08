@@ -197,33 +197,29 @@ func TestPrepareListRequest(t *testing.T) {
 		{
 			name: "basic list request",
 			options: &Options{
-				Type:     "Service",
-				PageSize: 100,
+				Type: "Service",
 				BaseOptions: shared.BaseOptions{
 					Token:  "test-token",
 					APIURL: "https://api.example.com"},
 			},
 			nextPage: "",
 			expectedParams: map[string]string{
-				"type":     "Service",
-				"pageSize": "100",
+				"type": "Service",
 			},
 		},
 		{
 			name: "list with name filter",
 			options: &Options{
-				Type:     "Service",
-				Name:     "test-service",
-				PageSize: 50,
+				Type: "Service",
+				Name: "test-service",
 				BaseOptions: shared.BaseOptions{
 					Token:  "test-token",
 					APIURL: "https://api.example.com"},
 			},
 			nextPage: "",
 			expectedParams: map[string]string{
-				"type":     "Service",
-				"name":     "test-service",
-				"pageSize": "50",
+				"type": "Service",
+				"name": "test-service",
 			},
 		},
 	}

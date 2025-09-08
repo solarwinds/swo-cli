@@ -17,6 +17,11 @@ import (
 	"github.com/solarwinds/swo-cli/shared"
 )
 
+const (
+	// DefaultPageSize for retrieving list of enties etc.
+	DefaultPageSize = 100
+)
+
 var (
 	// ErrInvalidAPIResponse indicates a non-2xx status code was received from the API
 	ErrInvalidAPIResponse = errors.New("received non-2xx status code")
@@ -89,10 +94,7 @@ func (c *Client) prepareListRequest(ctx context.Context, nextPage string) (*http
 			params.Add("name", c.opts.Name)
 		}
 
-		// Page size
-		if c.opts.PageSize > 0 {
-			params.Add("pageSize", strconv.Itoa(c.opts.PageSize))
-		}
+		params.Add("pageSize", strconv.Itoa(DefaultPageSize))
 	} else {
 		u, err := url.Parse(nextPage)
 		if err != nil {
