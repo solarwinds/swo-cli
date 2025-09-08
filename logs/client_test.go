@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/solarwinds/swo-cli/config"
+	"github.com/solarwinds/swo-cli/shared"
 
 	"github.com/stretchr/testify/require"
 )
@@ -61,16 +62,16 @@ func TestPrepareRequest(t *testing.T) {
 	}{
 		{
 			name:           "default request",
-			options:        &Options{Token: "123456"},
+			options:        &Options{BaseOptions: shared.BaseOptions{Token: "123456"}},
 			expectedValues: map[string][]string{},
 		},
 		{
 			name: "custom count group startTime and endTime",
 			options: &Options{
-				Token:   "123456",
-				group:   "groupValue",
-				minTime: "10 seconds ago",
-				maxTime: "2 seconds ago",
+				BaseOptions: shared.BaseOptions{Token: "123456"},
+				group:       "groupValue",
+				minTime:     "10 seconds ago",
+				maxTime:     "2 seconds ago",
 			},
 			expectedValues: map[string][]string{
 				"group":     {"groupValue"},
@@ -80,7 +81,7 @@ func TestPrepareRequest(t *testing.T) {
 		},
 		{
 			name:    "system flag",
-			options: &Options{Token: "123456", system: "systemValue"},
+			options: &Options{BaseOptions: shared.BaseOptions{Token: "123456"}, system: "systemValue"},
 			expectedValues: map[string][]string{
 				"filter": {`host:"systemValue"`},
 			},
@@ -88,9 +89,9 @@ func TestPrepareRequest(t *testing.T) {
 		{
 			name: "system flag with filter",
 			options: &Options{
-				Token:  "123456",
-				args:   []string{`"access denied"`, "1.2.3.4", "-sshd"},
-				system: "systemValue",
+				BaseOptions: shared.BaseOptions{Token: "123456"},
+				args:        []string{`"access denied"`, "1.2.3.4", "-sshd"},
+				system:      "systemValue",
 			},
 			expectedValues: map[string][]string{
 				"filter": func() []string {
@@ -172,9 +173,11 @@ func TestRun(t *testing.T) {
 	require.NoError(t, err)
 
 	opts := &Options{
-		Token:  "123456",
-		APIURL: fmt.Sprintf("http://%s", listener.Addr().String()),
-		json:   true,
+		BaseOptions: shared.BaseOptions{
+			Token:  "123456",
+			APIURL: fmt.Sprintf("http://%s", listener.Addr().String()),
+		},
+		json: true,
 	}
 
 	err = opts.Init([]string{})
@@ -230,7 +233,7 @@ func TestPrintResultStandard(t *testing.T) {
 
 	time.Local = location
 
-	client, err := NewClient(&Options{Token: "123456", APIURL: config.DefaultAPIURL})
+	client, err := NewClient(&Options{BaseOptions: shared.BaseOptions{Token: "123456", APIURL: config.DefaultAPIURL}})
 	require.NoError(t, err)
 
 	r, w, err := os.Pipe()
@@ -266,7 +269,7 @@ func TestPrintResultJSON(t *testing.T) {
 
 	time.Local = location
 
-	client, err := NewClient(&Options{Token: "123456", APIURL: config.DefaultAPIURL, json: true})
+	client, err := NewClient(&Options{BaseOptions: shared.BaseOptions{Token: "123456", APIURL: config.DefaultAPIURL}, json: true})
 	require.NoError(t, err)
 
 	r, w, err := os.Pipe()

@@ -1,0 +1,43 @@
+{
+	"name": "SolarWinds CLI Development",
+	"image": "mcr.microsoft.com/devcontainers/go:dev-1.25",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go",
+				"ms-vscode.vscode-json",
+				"ms-vscode.makefile-tools",
+				"GitHub.copilot",
+				"GitHub.copilot-chat"
+			],
+			"settings": {
+				"go.toolsManagement.checkForUpdates": "local",
+				"go.useLanguageServer": true,
+				"go.formatTool": "gofmt",
+				"go.lintTool": "golangci-lint",
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.organizeImports": "explicit"
+				}
+			}
+		}
+	},
+	"postCreateCommand": "/bin/bash -c '.devcontainer/setup.sh'",
+	"forwardPorts": [
+		3000,
+		8080
+	],
+	"mounts": [
+		"source=swo-cli-go-mod-cache,target=/go/pkg/mod,type=volume",
+		"source=swo-cli-go-tools,target=/home/vscode/go,type=volume"
+	],
+	"remoteEnv": {
+		"GOPATH": "/home/vscode/go",
+		"GOCACHE": "/home/vscode/.cache/go-build",
+		"GOMODCACHE": "/go/pkg/mod",
+		"GOSUMDB": "off",
+		"GOPROXY": "direct",
+		"PATH": "${containerWorkspaceFolder}/scripts:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/go/bin:/usr/local/go/bin:/home/vscode/.local/bin:/home/vscode/go/bin",
+		"WORKSPACE_FOLDER": "${containerWorkspaceFolder}"
+	}
+}

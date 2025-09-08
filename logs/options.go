@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/olebedev/when"
+	"github.com/solarwinds/swo-cli/shared"
 )
 
 var (
@@ -39,16 +40,15 @@ var (
 
 // Options represents the command line options for the logs command
 type Options struct {
-	args       []string
-	configFile string
-	group      string
-	system     string
-	maxTime    string
-	minTime    string
-	json       bool
-	follow     bool
-	Token      string
-	APIURL     string
+	shared.BaseOptions // Embedded base options (Verbose, Token, APIURL)
+	args               []string
+	configFile         string
+	group              string
+	system             string
+	maxTime            string
+	minTime            string
+	json               bool
+	follow             bool
 }
 
 // Init initializes the options by parsing and validating the time flags
