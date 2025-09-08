@@ -231,10 +231,6 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))
 	}
 
-	if len(content) == 0 {
-		return nil, ErrNoContent
-	}
-
 	return content, nil
 }
 
@@ -352,6 +348,10 @@ func (c *Client) ListEntities(ctx context.Context) error {
 			return err
 		}
 
+		if len(content) == 0 {
+			return ErrNoContent
+		}
+
 		var response listEntitiesResponse
 		err = json.Unmarshal(content, &response)
 		if err != nil {
@@ -385,6 +385,10 @@ func (c *Client) GetEntity(ctx context.Context) error {
 		return err
 	}
 
+	if len(content) == 0 {
+		return ErrNoContent
+	}
+
 	var entity Entity
 	err = json.Unmarshal(content, &entity)
 	if err != nil {
@@ -407,6 +411,10 @@ func (c *Client) UpdateEntity(ctx context.Context) error {
 		return err
 	}
 
+	if len(content) == 0 {
+		return ErrNoContent
+	}
+
 	var entity Entity
 	err = json.Unmarshal(content, &entity)
 	if err != nil {
@@ -419,26 +427,10 @@ func (c *Client) UpdateEntity(ctx context.Context) error {
 		return fmt.Errorf("error while preparing update request to SWO: %w", err)
 	}
 
-	// Handle the update request specially since it may return no content
-	c.logger.Log("Sending %s request to %s", updateRequest.Method, updateRequest.URL.String())
-
-	response, err := c.httpClient.Do(updateRequest)
+	// Use doRequest for consistency - empty content is acceptable for updates
+	_, err = c.doRequest(updateRequest)
 	if err != nil {
-		return fmt.Errorf("error while sending http request to SWO: %w", err)
-	}
-	defer func() {
-		err := response.Body.Close()
-		if err != nil {
-			slog.Error("Could not close https body", "error", err)
-		}
-	}()
-
-	c.logger.Log("Response status: %d %s", response.StatusCode, response.Status)
-
-	// For updates, we accept both 200/202 (with content) and 204 (no content)
-	if response.StatusCode < 200 || response.StatusCode > 299 {
-		content, _ := io.ReadAll(response.Body)
-		return fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))
+		return err
 	}
 
 	if !c.opts.JSON {
@@ -460,6 +452,10 @@ func (c *Client) ListTypes(ctx context.Context) error {
 	content, err := c.doRequest(request)
 	if err != nil {
 		return err
+	}
+
+	if len(content) == 0 {
+		return ErrNoContent
 	}
 
 	var response listTypesResponse
