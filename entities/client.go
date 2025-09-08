@@ -442,7 +442,7 @@ func (c *Client) UpdateEntity(ctx context.Context) error {
 	if !c.opts.JSON {
 		_, _ = fmt.Fprintf(c.output, "Entity %s updated successfully\n", c.opts.ID)
 	} else {
-		_, _ = fmt.Fprintf(c.output, "{\"status\":\"success\",\"id\":\"%s\"}\n", c.opts.ID)
+		_, _ = fmt.Fprintf(c.output, `{"status":"success","id":"%s"}\n`, c.opts.ID)
 	}
 
 	return nil
