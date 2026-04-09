@@ -26,6 +26,7 @@ jobs:
         with:
           go-version: 1.22
       - name: Checkout solarwinds-actions/gha-signing
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/checkout@v4
         with:
           repository: solarwinds-actions/gha-signing
@@ -45,13 +46,15 @@ jobs:
           SWO_MAC_P8_FILE: ${{ secrets.SWO_MAC_P8_FILE }}
           SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
           SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
-      - name: Azure Login
+      - name: Azure Login (Federated Identity)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Sign Windows binary
+      - name: Sign Files
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: ./.github/actions/gha-signing/ats-sign
         with:
           files-to-sign: "*.exe,*.dll"
