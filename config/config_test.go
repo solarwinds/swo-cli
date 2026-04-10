@@ -153,7 +153,7 @@ api-url: https://config.example.com
 		},
 		{
 			name:     "read token from env var",
-			expected: Config{ //nolint:gosec
+			expected: Config{
 				APIURL: DefaultAPIURL,
 				Token:  "tokenFromEnvVar",
 			},
@@ -213,7 +213,7 @@ func TestTrimmingWhitespace(t *testing.T) {
 		expected   Config
 		action     func()
 	}{
-		{ //nolint:gosec
+		{
 			name:   "trim CLI arguments",
 			apiURL: "  https://cli.example.com  ",
 			token:  "  cli_token  ",
@@ -299,7 +299,7 @@ api-url: "   "
 				return createConfigFile(t, yamlStr)
 			}(),
 		},
-		{ //nolint:gosec
+		{
 			name:  "mixed whitespace scenarios",
 			token: "  cli_token  ", // CLI token with whitespace
 			expected: Config{
