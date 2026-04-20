@@ -12,9 +12,8 @@ linters:
     - nilerr
     - staticcheck
 
-issues:
-  exclusions:
-    rules:
-      - path: _test\.go
-        linters:
-          - gosec
+exclusions:
+  rules:
+    - path: _test\.go
+      linters:
+        - gosec
