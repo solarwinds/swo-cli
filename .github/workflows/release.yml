@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
   # packages: write
   # issues: write
 
@@ -24,9 +25,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22
-      - name: Install SignPath Powershell module
-        shell: pwsh
-        run: Install-Module -Name SignPath -Confirm:$False -Force
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -35,12 +33,29 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SP_CI_USER_TOKEN: ${{ secrets.SP_CI_USER_TOKEN }}
-          SP_ORGANIZATION_ID: ${{ secrets.SP_ORGANIZATION_ID }}
-          SP_PROJECT: ${{ secrets.SP_PROJECT }}
-
           SWO_ISSUER_ID: ${{ secrets.SWO_ISSUER_ID }}
           SWO_KEY_ID: ${{ secrets.SWO_KEY_ID }}
           SWO_MAC_P8_FILE: ${{ secrets.SWO_MAC_P8_FILE }}
           SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
           SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
+      - name: Checkout solarwinds-actions/gha-signing
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/checkout@v4
+        with:
+          repository: solarwinds-actions/gha-signing
+          token: ${{ secrets.FGPAT_ENOPS_7950_SOLARWINDS_ACTIONS }}
+          ref: v1
+          path: ./.github/actions/gha-signing
+      - name: Azure Login (Federated Identity)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Sign Files
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: ./.github/actions/gha-signing/ats-sign
+        with:
+          files-to-sign: "*.exe,*.dll"
+          cert-profile: ${{ vars.ATS_CERT_PROFILE }}
