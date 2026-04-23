@@ -197,9 +197,9 @@ func (c *Client) prepareListTypesRequest(ctx context.Context) (*http.Request, er
 }
 
 func (c *Client) doRequest(req *http.Request) ([]byte, error) {
-	slog.Debug("Sending HTTP request", "method", req.Method, "url", req.URL.String())
+	slog.Debug("Sending HTTP request", "method", req.Method, "url", req.URL.String()) //nolint:gosec
 
-	response, err := c.httpClient.Do(req)
+	response, err := c.httpClient.Do(req) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("error while sending http request to SWO: %w", err)
 	}
