@@ -16,3 +16,4 @@ linters:
       - path: _test\.go
         linters:
           - gosec
+        text: "G101"
