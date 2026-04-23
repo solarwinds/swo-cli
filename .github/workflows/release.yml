@@ -25,6 +25,19 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v1"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SWO_ISSUER_ID: ${{ secrets.SWO_ISSUER_ID }}
+          SWO_KEY_ID: ${{ secrets.SWO_KEY_ID }}
+          SWO_MAC_P8_FILE: ${{ secrets.SWO_MAC_P8_FILE }}
+          SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
+          SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
       - name: Checkout solarwinds-actions/gha-signing
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/checkout@v4
@@ -33,19 +46,6 @@ jobs:
           token: ${{ secrets.FGPAT_ENOPS_7950_SOLARWINDS_ACTIONS }}
           ref: v1
           path: ./.github/actions/gha-signing
-      - name: Build binaries
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: "~> v1"
-          args: build --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SWO_ISSUER_ID: ${{ secrets.SWO_ISSUER_ID }}
-          SWO_KEY_ID: ${{ secrets.SWO_KEY_ID }}
-          SWO_MAC_P8_FILE: ${{ secrets.SWO_MAC_P8_FILE }}
-          SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
-          SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
       - name: Azure Login (Federated Identity)
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: azure/login@v2
@@ -59,16 +59,3 @@ jobs:
         with:
           files-to-sign: "*.exe,*.dll"
           cert-profile: ${{ vars.ATS_CERT_PROFILE }}
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: "~> v1"
-          args: release --skip-build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SWO_ISSUER_ID: ${{ secrets.SWO_ISSUER_ID }}
-          SWO_KEY_ID: ${{ secrets.SWO_KEY_ID }}
-          SWO_MAC_P8_FILE: ${{ secrets.SWO_MAC_P8_FILE }}
-          SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
-          SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
