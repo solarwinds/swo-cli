@@ -11,8 +11,3 @@ linters:
     - nilnil
     - nilerr
     - staticcheck
-  exclusions:
-    rules:
-      - path: _test\.go
-        linters:
-          - gosec

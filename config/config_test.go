@@ -152,7 +152,7 @@ api-url: https://config.example.com
 			}(),
 		},
 		{
-			name:     "read token from env var",
+			name: "read token from env var",
 			expected: Config{
 				APIURL: DefaultAPIURL,
 				Token:  "tokenFromEnvVar",
