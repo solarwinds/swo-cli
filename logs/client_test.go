@@ -80,6 +80,16 @@ func TestPrepareRequest(t *testing.T) {
 			},
 		},
 		{
+			name: "entity-id flag",
+			options: &Options{
+				BaseOptions: shared.BaseOptions{Token: "123456"},
+				entityID:    "g-1000000000000007824",
+			},
+			expectedValues: map[string][]string{
+				"entityId": {"g-1000000000000007824"},
+			},
+		},
+		{
 			name:    "system flag",
 			options: &Options{BaseOptions: shared.BaseOptions{Token: "123456"}, system: "systemValue"},
 			expectedValues: map[string][]string{
