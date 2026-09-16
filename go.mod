@@ -1,6 +1,6 @@
 module github.com/solarwinds/swo-cli
 
-go 1.22.0
+go 1.26.8
 
 require (
 	github.com/olebedev/when v1.1.0
