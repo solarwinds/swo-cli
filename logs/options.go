@@ -12,8 +12,9 @@ import (
 var (
 	now = time.Now()
 
-	errMinTimeFlag = errors.New("failed to parse --min-time flag")
-	errMaxTimeFlag = errors.New("failed to parse --max-time flag")
+	errMinTimeFlag      = errors.New("failed to parse --min-time flag")
+	errMaxTimeFlag      = errors.New("failed to parse --max-time flag")
+	errGroupAndEntityID = errors.New("--group and --entity-id are mutually exclusive")
 
 	timeLayouts = []string{
 		time.Layout,
@@ -44,6 +45,7 @@ type Options struct {
 	args               []string
 	configFile         string
 	group              string
+	entityID           string
 	system             string
 	maxTime            string
 	minTime            string
@@ -54,6 +56,10 @@ type Options struct {
 // Init initializes the options by parsing and validating the time flags
 func (opts *Options) Init(args []string) error {
 	opts.args = args
+
+	if opts.group != "" && opts.entityID != "" {
+		return errGroupAndEntityID
+	}
 
 	if opts.minTime != "" {
 		result, err := parseTime(opts.minTime)

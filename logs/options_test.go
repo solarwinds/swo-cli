@@ -55,6 +55,14 @@ func TestNewOptions(t *testing.T) {
 			},
 			expectedError: errMinTimeFlag,
 		},
+		{
+			name: "group and entity-id are mutually exclusive",
+			opts: &Options{group: "groupValue", entityID: "g-1000000000000007824"},
+			action: func() {
+				now = fixedTime
+			},
+			expectedError: errGroupAndEntityID,
+		},
 	}
 
 	for _, tc := range testCases {
