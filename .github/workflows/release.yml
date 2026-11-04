@@ -24,7 +24,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
+          # Keep the release toolchain in lockstep with the `go` directive in
+          # go.mod; released binaries embed this toolchain's standard library.
+          go-version-file: go.mod
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
