@@ -27,6 +27,31 @@ jobs:
           # Keep the release toolchain in lockstep with the `go` directive in
           # go.mod; released binaries embed this toolchain's standard library.
           go-version-file: go.mod
+      - name: Azure Login (Federated Identity)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Download jsign
+        env:
+          JSIGN_VERSION: "7.6"
+          # SHA256 digest of the jsign-7.6.jar asset on the upstream GitHub release.
+          JSIGN_SHA256: 6cf58aa080e7ff82656f320cff8d4a3bff30408df8766806dcba3740dd839fa5
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/jsign.jar" \
+            "https://github.com/ebourg/jsign/releases/download/${JSIGN_VERSION}/jsign-${JSIGN_VERSION}.jar"
+          echo "${JSIGN_SHA256}  $RUNNER_TEMP/jsign.jar" | sha256sum -c -
+      - name: Get Azure Trusted Signing access token
+        id: ats
+        run: |
+          token="$(az account get-access-token --resource https://codesigning.azure.net --query accessToken -o tsv)"
+          if [ -z "$token" ]; then
+            echo "::error::Empty Azure Trusted Signing access token"
+            exit 1
+          fi
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -40,24 +65,7 @@ jobs:
           SWO_MAC_P8_FILE: ${{ secrets.SWO_MAC_P8_FILE }}
           SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
           SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
-      - name: Checkout solarwinds-actions/gha-signing
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: actions/checkout@v4
-        with:
-          repository: solarwinds-actions/gha-signing
-          token: ${{ secrets.FGPAT_ENOPS_7950_SOLARWINDS_ACTIONS }}
-          ref: v1
-          path: ./.github/actions/gha-signing
-      - name: Azure Login (Federated Identity)
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Sign Files
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: ./.github/actions/gha-signing/ats-sign
-        with:
-          files-to-sign: "*.exe,*.dll"
-          cert-profile: ${{ vars.ATS_CERT_PROFILE }}
+          ATS_ACCESS_TOKEN: ${{ steps.ats.outputs.token }}
+          ATS_CERT_PROFILE: ${{ vars.ATS_CERT_PROFILE }}
+          JSIGN_JAR: ${{ runner.temp }}/jsign.jar
+          REQUIRE_SIGNING: "1"

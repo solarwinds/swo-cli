@@ -21,6 +21,11 @@ builds:
       - "-s -w -X 'main.version=v{{ .Version }}'"
     targets:
       - windows_amd64
+    hooks:
+      post:
+        # Authenticode-signs swo.exe before it is archived and checksummed.
+        - cmd: ./scripts/sign-windows.sh "{{ .Path }}"
+          output: true
 
 archives:
   - builds:
