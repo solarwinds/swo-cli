@@ -33,6 +33,24 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install osslsigncode
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends osslsigncode
+      - name: Download Microsoft root CA
+        env:
+          # SHA256 digest of the DER certificate published by Microsoft PKI.
+          ROOT_CA_SHA256: 5367f20c7ade0e2bca790915056d086b720c33c1fa2a2661acf787e3292e1270
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/ms-root-ca.crt" \
+            "https://www.microsoft.com/pkiops/certs/microsoft%20identity%20verification%20root%20certificate%20authority%202020.crt"
+          echo "${ROOT_CA_SHA256}  $RUNNER_TEMP/ms-root-ca.crt" | sha256sum -c -
+          openssl x509 -inform DER -in "$RUNNER_TEMP/ms-root-ca.crt" -out "$RUNNER_TEMP/ms-root-ca.pem"
       - name: Download jsign
         env:
           JSIGN_VERSION: "7.6"
@@ -66,6 +84,9 @@ jobs:
           SWO_MAC_P12_CERT: ${{ secrets.SWO_MAC_P12_CERT }}
           SWO_P12_PASSWORD: ${{ secrets.SWO_P12_PASSWORD }}
           ATS_ACCESS_TOKEN: ${{ steps.ats.outputs.token }}
+          ATS_ENDPOINT: ${{ vars.ATS_ENDPOINT }}
+          ATS_ACCOUNT: ${{ vars.ATS_ACCOUNT }}
           ATS_CERT_PROFILE: ${{ vars.ATS_CERT_PROFILE }}
+          ATS_ROOT_CA: ${{ runner.temp }}/ms-root-ca.pem
           JSIGN_JAR: ${{ runner.temp }}/jsign.jar
           REQUIRE_SIGNING: "1"
