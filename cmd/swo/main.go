@@ -13,7 +13,7 @@ import (
 )
 
 // Automatically updated by goreleaser in CI
-var version = "v1.3.8"
+var version = "v1.3.9"
 
 func main() {
 	app := &cli.App{
