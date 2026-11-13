@@ -7,6 +7,12 @@ server logs from [SolarWinds Observability](https://www.solarwinds.com/solarwind
 
 Download the latest release from the [Releases](https://github.com/solarwinds/swo-cli/releases) page.
 
+Releases after v1.3.9 publish an SPDX SBOM next to each zip (`<zip>.sbom.json`) and a signed build provenance attestation for every file. Verify a download with the [GitHub CLI](https://cli.github.com/):
+
+```bash
+gh attestation verify swo-cli_linux_amd64.zip --repo solarwinds/swo-cli
+```
+
 Retrieve the full-access token from SolarWinds Observability and configure it using environment variables (recommended):
 
 ```bash

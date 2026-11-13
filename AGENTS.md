@@ -25,9 +25,10 @@ golangci-lint run   # GOLANGCI_LINT_VERSION from the Makefile (or: make lint)
 go mod tidy && git diff --exit-code -- go.mod go.sum
 make vuln            # govulncheck for every release target
 goreleaser check    # GORELEASER_VERSION from the Makefile, also used by release.yml
+goreleaser release --snapshot --clean --skip=notarize,publish   # needs syft on PATH (make install-syft on Linux amd64)
 ```
 
-`make test`, `make lint` and `make vuln` run these checks locally. `make lint` builds golangci-lint from source, while CI uses the release binary of the same version, so results can differ in rare cases. Tool versions live only in the `Makefile` (`GOLANGCI_LINT_VERSION`, `GOIMPORTS_VERSION`, `GOVULNCHECK_VERSION`, `GORELEASER_VERSION`); CI reads them from there. Format imports with `make fix-lint`, which groups `github.com/solarwinds/swo-cli` imports the way lint expects.
+`make test`, `make lint` and `make vuln` run these checks locally. `make lint` builds golangci-lint from source, while CI uses the release binary of the same version, so results can differ in rare cases. Tool versions live only in the `Makefile` (`GOLANGCI_LINT_VERSION`, `GOIMPORTS_VERSION`, `GOVULNCHECK_VERSION`, `GORELEASER_VERSION`, `SYFT_VERSION`); CI reads them from there. Format imports with `make fix-lint`, which groups `github.com/solarwinds/swo-cli` imports the way lint expects.
 
 ## Config behaviour
 
@@ -57,7 +58,8 @@ goreleaser check    # GORELEASER_VERSION from the Makefile, also used by release
 
 1. Open a PR `chore: bump version to vX.Y.Z` that bumps `version` in `cmd/swo/main.go`.
 2. After it merges, tag `vX.Y.Z` on `main` and push the tag.
-3. `release.yml` builds the release with GoReleaser and signs the Windows and macOS binaries.
+3. `release.yml` builds the release with GoReleaser v2 as a draft, signs the Windows and macOS binaries, generates SBOMs, attests build provenance, then publishes the release.
+   If a step after GoReleaser fails, the tag is left with only a draft release: rerun the failed job (GoReleaser replaces the draft) or delete the draft before retagging. A rerun re-signs and rebuilds, so attestations from the failed run point at artifacts that were never published.
 
 Do not change signing/notarization config or release secrets without the maintainer.
 

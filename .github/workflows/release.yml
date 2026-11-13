@@ -6,16 +6,17 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-  id-token: write
-  # packages: write
-  # issues: write
+permissions: {}
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     environment: prod
+    permissions:
+      contents: write
+      # Azure federated login and Sigstore signing of build provenance.
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -28,6 +29,8 @@ jobs:
           # Keep the release toolchain in lockstep with the `go` directive in
           # go.mod; released binaries embed this toolchain's standard library.
           go-version-file: go.mod
+      - name: Install syft
+        run: make -s install-syft >> "$GITHUB_PATH"
       - name: Azure Login (Federated Identity)
         uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
@@ -78,7 +81,7 @@ jobs:
           test -n "$v"
           echo "version=$v" >> "$GITHUB_OUTPUT"
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
         with:
           distribution: goreleaser
           version: ${{ steps.goreleaser-version.outputs.version }}
@@ -97,3 +100,16 @@ jobs:
           ATS_ROOT_CA: ${{ runner.temp }}/ms-root-ca.pem
           JSIGN_JAR: ${{ runner.temp }}/jsign.jar
           REQUIRE_SIGNING: "1"
+      - name: Attest build provenance of released artifacts
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: dist/swo-cli_checksums.txt
+      - name: Attest build provenance of checksums file
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/swo-cli_checksums.txt
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
