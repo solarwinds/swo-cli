@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -45,11 +45,6 @@ var (
 )
 
 func TestPrepareRequest(t *testing.T) {
-	location, err := time.LoadLocation("GMT")
-	require.NoError(t, err)
-
-	time.Local = location
-
 	fixedTime, err := time.Parse(time.DateTime, "2000-01-01 10:00:30")
 	require.NoError(t, err)
 	now = fixedTime
@@ -75,8 +70,8 @@ func TestPrepareRequest(t *testing.T) {
 			},
 			expectedValues: map[string][]string{
 				"group":     {"groupValue"},
-				"startTime": {"2000-01-01T10:00:20Z"},
-				"endTime":   {"2000-01-01T10:00:28Z"},
+				"startTime": {inLocal(fixedTime.Add(-10 * time.Second))},
+				"endTime":   {inLocal(fixedTime.Add(-2 * time.Second))},
 			},
 		},
 		{
@@ -135,39 +130,19 @@ func TestPrepareRequest(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	location, err := time.LoadLocation("GMT")
-	require.NoError(t, err)
-
-	time.Local = location
-
-	handler := func(w http.ResponseWriter, _ *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/logs", func(w http.ResponseWriter, _ *http.Request) {
 		data, err := json.Marshal(logsData)
-		require.NoError(t, err)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
-
-		_, err = w.Write(data)
-		require.NoError(t, err)
-	}
-
-	wg := sync.WaitGroup{}
-
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	require.NoError(t, err)
-
-	mux := http.NewServeMux()
-	server := &http.Server{
-		ReadHeaderTimeout: 5 * time.Second,
-		Handler:           mux,
-	}
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		mux.HandleFunc("/v1/logs", handler)
-		err = server.Serve(listener)
-	}()
+		_, _ = w.Write(data)
+	})
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
 
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
@@ -175,7 +150,7 @@ func TestRun(t *testing.T) {
 	opts := &Options{
 		BaseOptions: shared.BaseOptions{
 			Token:  "123456",
-			APIURL: fmt.Sprintf("http://%s", listener.Addr().String()),
+			APIURL: server.URL,
 		},
 		json: true,
 	}
@@ -188,34 +163,12 @@ func TestRun(t *testing.T) {
 
 	client.output = w
 
-	outputCompareDone := make(chan struct{})
-
-	wg.Add(1)
+	var output []byte
+	var readErr error
+	readDone := make(chan struct{})
 	go func() {
-		defer wg.Done()
-		defer close(outputCompareDone)
-
-		output, err := io.ReadAll(r)
-		require.NoError(t, err)
-
-		expectedOutput := ""
-		for i, l := range logsData.Logs {
-			data, err := json.Marshal(l)
-			require.NoError(t, err)
-
-			expectedOutput += string(data)
-			if i != len(logsData.Logs)-1 {
-				expectedOutput += "\n"
-			}
-		}
-
-		require.NoError(t, err)
-		require.Equal(t, expectedOutput, string(output[:len(output)-1])) // last char is a new line character
-	}()
-
-	go func() {
-		<-outputCompareDone
-		_ = server.Shutdown(context.Background())
+		defer close(readDone)
+		output, readErr = io.ReadAll(r)
 	}()
 
 	err = client.Run(context.Background())
@@ -224,15 +177,21 @@ func TestRun(t *testing.T) {
 	err = w.Close()
 	require.NoError(t, err)
 
-	wg.Wait()
+	<-readDone
+	require.NoError(t, readErr)
+
+	expectedOutput := ""
+	for _, l := range logsData.Logs {
+		data, err := json.Marshal(l)
+		require.NoError(t, err)
+
+		expectedOutput += string(data) + "\n"
+	}
+
+	require.Equal(t, expectedOutput, string(output))
 }
 
 func TestPrintResultStandard(t *testing.T) {
-	location, err := time.LoadLocation("GMT")
-	require.NoError(t, err)
-
-	time.Local = location
-
 	client, err := NewClient(&Options{BaseOptions: shared.BaseOptions{Token: "123456", APIURL: config.DefaultAPIURL}})
 	require.NoError(t, err)
 
@@ -264,11 +223,6 @@ func TestPrintResultStandard(t *testing.T) {
 }
 
 func TestPrintResultJSON(t *testing.T) {
-	location, err := time.LoadLocation("GMT")
-	require.NoError(t, err)
-
-	time.Local = location
-
 	client, err := NewClient(&Options{BaseOptions: shared.BaseOptions{Token: "123456", APIURL: config.DefaultAPIURL}, json: true})
 	require.NoError(t, err)
 
