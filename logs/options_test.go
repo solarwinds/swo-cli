@@ -10,11 +10,6 @@ import (
 )
 
 func TestNewOptions(t *testing.T) {
-	location, err := time.LoadLocation("GMT")
-	require.NoError(t, err)
-
-	time.Local = location
-
 	fixedTime, err := time.Parse(time.DateTime, "2000-01-01 10:00:30")
 	require.NoError(t, err)
 
@@ -30,7 +25,7 @@ func TestNewOptions(t *testing.T) {
 			opts: &Options{minTime: "5 seconds ago"},
 			expected: Options{
 				args:    []string{},
-				minTime: "2000-01-01T10:00:25Z",
+				minTime: inLocal(fixedTime.Add(-5 * time.Second)),
 			},
 			action: func() {
 				now = fixedTime
@@ -41,7 +36,7 @@ func TestNewOptions(t *testing.T) {
 			opts: &Options{maxTime: "in 5 seconds"},
 			expected: Options{
 				args:    []string{},
-				maxTime: "2000-01-01T10:00:35Z",
+				maxTime: inLocal(fixedTime.Add(5 * time.Second)),
 			},
 			action: func() {
 				now = fixedTime
@@ -78,10 +73,10 @@ func TestNewOptions(t *testing.T) {
 }
 
 func TestParseTime(t *testing.T) {
-	location, err := time.LoadLocation("GMT")
+	fixedTime, err := time.Parse(time.DateTime, "2000-01-01 10:00:30")
 	require.NoError(t, err)
 
-	time.Local = location
+	now = fixedTime
 
 	testCases := []struct {
 		name     string
@@ -91,17 +86,17 @@ func TestParseTime(t *testing.T) {
 		{
 			name:     "RFC3339",
 			input:    "2000-01-01T12:13:14Z",
-			expected: "2000-01-01T12:13:14Z",
+			expected: inLocal(time.Date(2000, 1, 1, 12, 13, 14, 0, time.UTC)),
 		},
 		{
 			name:     "RFC822Z",
-			input:    "04 Feb 00 13:14 MST",
-			expected: "2000-02-04T13:14:00Z",
+			input:    "04 Feb 00 13:14 +0000",
+			expected: inLocal(time.Date(2000, 2, 4, 13, 14, 0, 0, time.UTC)),
 		},
 		{
 			name:     "human readable",
 			input:    "5 seconds ago",
-			expected: "2000-01-01T10:00:25Z",
+			expected: inLocal(fixedTime.Add(-5 * time.Second)),
 		},
 		{
 			name:     "append UTC at the end",
@@ -109,11 +104,6 @@ func TestParseTime(t *testing.T) {
 			expected: "2024-05-13T13:00:00Z",
 		},
 	}
-
-	fixedTime, err := time.Parse(time.DateTime, "2000-01-01 10:00:30")
-	require.NoError(t, err)
-
-	now = fixedTime
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -123,4 +113,9 @@ func TestParseTime(t *testing.T) {
 			require.Equal(t, tc.expected, result)
 		})
 	}
+}
+
+// inLocal formats t as parseTime does: RFC3339 in the machine's local zone.
+func inLocal(t time.Time) string {
+	return t.In(time.Local).Format(time.RFC3339)
 }
