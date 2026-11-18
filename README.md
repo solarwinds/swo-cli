@@ -242,7 +242,7 @@ echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
 
 1. Run all the tests with `go test -v -count=1 ./...`
 2. Run go linter with `make lint`
-  - You may try to fix the issues found by `make fix-lint` or ask Copilot to help you (there is a `fix-lint` prompt)
+  - You may try to fix the issues found by `make fix-lint`; see [AGENTS.md](AGENTS.md) for the exact commands CI runs
 ### Bug report:
 
 1. See whether the issue has already been reported:

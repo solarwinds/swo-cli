@@ -1,7 +1,8 @@
 *.swp
 /bin
 .idea
-swo
+/swo
+/cmd/swo/swo
 dist/
 
 # Binaries for programs and plugins
@@ -27,3 +28,9 @@ go.work.sum
 # env file
 .env
 env_vars.sh
+
+# Local agent and OS files
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+.DS_Store
