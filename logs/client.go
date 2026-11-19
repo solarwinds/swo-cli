@@ -80,6 +80,9 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 		if c.opts.group != "" {
 			params.Add("group", c.opts.group)
 		}
+		if c.opts.entityID != "" {
+			params.Add("entityId", c.opts.entityID)
+		}
 		if c.opts.minTime != "" {
 			params.Add("startTime", c.opts.minTime)
 		}

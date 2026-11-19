@@ -10,17 +10,19 @@ import (
 
 // Context keys for command line flags
 const (
-	ConfigContextKey  = "config"
-	GroupContextKey   = "group"
-	SystemContextKey  = "system"
-	MaxTimeContextKey = "max-time"
-	MinTimeContextKey = "min-time"
-	JSONContextKey    = "json"
-	FollowContextKey  = "follow"
+	ConfigContextKey   = "config"
+	GroupContextKey    = "group"
+	EntityIDContextKey = "entity-id"
+	SystemContextKey   = "system"
+	MaxTimeContextKey  = "max-time"
+	MinTimeContextKey  = "min-time"
+	JSONContextKey     = "json"
+	FollowContextKey   = "follow"
 )
 
 var flagsGet = []cli.Flag{
-	&cli.StringFlag{Name: GroupContextKey, Aliases: []string{"g"}, Usage: "group name to search"},
+	&cli.StringFlag{Name: GroupContextKey, Aliases: []string{"g"}, Usage: "group name to search (matched as a substring on the server; use --entity-id to target a specific group precisely)"},
+	&cli.StringFlag{Name: EntityIDContextKey, Aliases: []string{"e"}, Usage: "entity id (e.g. g-1000000000000007824) to search; mutually exclusive with --group"},
 	&cli.StringFlag{Name: MinTimeContextKey, Usage: "earliest time to search from", Value: "1 hour ago"},
 	&cli.StringFlag{Name: MaxTimeContextKey, Usage: "latest time to search from"},
 	&cli.StringFlag{Name: SystemContextKey, Aliases: []string{"s"}, Usage: "system to search"},
@@ -33,6 +35,7 @@ func runGet(cCtx *cli.Context) error {
 		args:       cCtx.Args().Slice(),
 		configFile: cCtx.String(ConfigContextKey),
 		group:      cCtx.String(GroupContextKey),
+		entityID:   cCtx.String(EntityIDContextKey),
 		system:     cCtx.String(SystemContextKey),
 		maxTime:    cCtx.String(MaxTimeContextKey),
 		minTime:    cCtx.String(MinTimeContextKey),
@@ -74,6 +77,7 @@ EXAMPLES:
    swo logs get -f "(www OR db) (nginx OR pgsql) -accepted"
    swo logs get -f -g <SWO_GROUP_NAME> "(nginx OR pgsql) -accepted"
    swo logs get --min-time 'yesterday at noon' --max-time 'today at 4am' -g <SWO_GROUP_NAME>
+   swo logs get -e g-1000000000000007824 "program:my-app"
    swo logs get -- -redis
 `,
 		Action: runGet,
