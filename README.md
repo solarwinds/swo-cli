@@ -21,6 +21,7 @@ Alternatively, you can add it to a config file `~/.swo-cli.yml`:
 read -s -p "token:" token
 echo "token: $token" > ~/.swo-cli.yml
 echo "api-url: https://api.na-01.cloud.solarwinds.com" >> ~/.swo-cli.yml
+chmod 600 ~/.swo-cli.yml
 ```
 
 From a command line, navigate into the folder, and execute commands 
@@ -42,10 +43,14 @@ The preferred and most secure way to configure the SWO CLI is using environment 
 
 ### Configuration File (Alternative)
 
-Ceate a config file in your home directory `~/.swo-cli.yml` 
-containing your full-access API token and API URL, 
-or create file in the directory of your choosing and use 
-option `-c /path/to/swo-cli-home.yml` at runtime. 
+The CLI reads a single config file: `~/.swo-cli.yml` by default, or the file
+given with the global `-c` option, e.g. `swo -c /path/to/swo-cli-home.yml logs get`.
+A leading `~/` expands to your home directory.
+
+- A missing or unreadable config file is ignored.
+- Config files in the current working directory (`./.swo-cli.yaml`, `./.swo-cli.yml`)
+  are never read. If one exists and `-c` is not given, the CLI prints a warning
+  to stderr; pass `-c ./.swo-cli.yaml` to use it.
 
 Example file:
 
@@ -54,12 +59,35 @@ token: 123456789012345678901234567890ab
 api-url: https://api.na-01.cloud.solarwinds.com
 ```
 
+The file contains your API token, so it must be owned by you and readable only
+by you (`chmod 600 ~/.swo-cli.yml`). On macOS/Linux the CLI prints a warning to
+stderr when the config file is readable or writable by group or other users.
+A file others can write is especially dangerous: they can change `api-url` and
+receive your token.
+
+### Command Line Flags
+
+`--api-url` and `--api-token` override all other sources. Avoid `--api-token`:
+its value is visible to other users in the process list and is stored in your
+shell history. Use `SWO_API_TOKEN` or the config file instead.
+
 ### Configuration Precedence
 
-Configuration values are loaded in the following order of precedence:
+Each value (`token`, `api-url`) is resolved independently, first match wins:
+
 1. Command line flags (`--api-token`, `--api-url`)
 2. Environment variables (`SWO_API_TOKEN`, `SWO_API_URL`)
-3. Configuration file (`~/.swo-cli.yml` or specified with `-c`)
+3. Config file (`-c <path>`, or `~/.swo-cli.yml` when `-c` is not given)
+4. Built-in default for the API URL (`https://api.na-01.cloud.solarwinds.com`); there is no default token
+
+The default config file is only read when the token or the API URL is not set by
+a flag or environment variable; a file passed with `-c` is always read.
+
+### API URL Requirements
+
+The API URL must use `https://`; the CLI refuses to send your token over plain
+HTTP. The only exception is `http://` to a loopback address (`localhost`,
+`127.0.0.0/8`, `[::1]`), intended for local testing.
 
 ## Usage & Examples
 
@@ -80,8 +108,8 @@ logs     command-line search for SolarWinds Observability log management service
 help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
---api-url value           URL of the SWO API (default: "https://api.na-01.cloud.solarwinds.com")
---api-token value         API token
+--api-url value           URL of the SWO API (must be https://) (default: "https://api.na-01.cloud.solarwinds.com")
+--api-token value         API token (not recommended: visible in process list and shell history; prefer the SWO_API_TOKEN env var or the config file)
 --config value, -c value  path to config (default: "~/.swo-cli.yml")
 --help, -h                show help
 --version, -v             print the version
@@ -212,17 +240,17 @@ swo logs get '"Connection reset by peer"'
 ### Multiple API tokens
 
 To use multiple API tokens (such as for separate home and work SolarWinds Observability
-accounts), create a `.swo-cli.yml` configuration file in each project's
-working directory and invoke the CLI in that directory. The CLI checks for
-`.swo-cli.yml` in the current working directory prior to using
-`~/.swo-cli.yml`.
-
-Alternatively, use shell aliases with different `-c` paths:
+accounts), keep one config file per account and select it with `-c`, for
+example via shell aliases:
 
 ```bash
-echo "alias swo1='swo logs get -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
-echo "alias swo2='swo logs get -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
+echo "alias swo1='swo -c /path/to/swo-cli-home.yml'" >> ~/.bashrc
+echo "alias swo2='swo -c /path/to/swo-cli-work.yml'" >> ~/.bashrc
+swo1 logs get Failure
 ```
+
+`SWO_API_URL` and `SWO_API_TOKEN` override values from the `-c` file, so unset
+them when switching accounts this way.
 
 ## Development & Contribute
 

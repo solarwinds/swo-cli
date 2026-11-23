@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,18 +14,9 @@ var (
 )
 
 func createConfigFile(t *testing.T, content string) string {
-	f, err := os.CreateTemp(os.TempDir(), "swo-config-test")
-	require.NoError(t, err, "creating a temporary file should not fail")
-
-	n, err := f.Write([]byte(content))
-	require.Equal(t, n, len(content))
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = os.Remove(f.Name())
-	})
-
-	return f.Name()
+	path := filepath.Join(t.TempDir(), "swo-cli.yml")
+	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
+	return path
 }
 
 func TestLoadConfig(t *testing.T) {
@@ -193,7 +185,7 @@ api-url: https://config.example.com
 				tc.action()
 			}
 
-			cfg, err := Init(tc.configFile, tc.apiURL, tc.token)
+			cfg, err := Init(tc.configFile, tc.configFile != "", tc.apiURL, tc.token)
 			require.True(t, errors.Is(err, tc.expectedError), "error: %v, expected: %v", err, tc.expectedError)
 			if tc.expectedError != nil {
 				return
@@ -329,7 +321,7 @@ api-url: "  https://config.example.com  "
 				tc.action()
 			}
 
-			cfg, err := Init(tc.configFile, tc.apiURL, tc.token)
+			cfg, err := Init(tc.configFile, tc.configFile != "", tc.apiURL, tc.token)
 			require.NoError(t, err)
 			require.Equal(t, &tc.expected, cfg)
 		})
@@ -387,7 +379,7 @@ api-url: [invalid yaml structure
 				tc.action()
 			}
 
-			cfg, err := Init(tc.configFile, tc.apiURL, tc.token)
+			cfg, err := Init(tc.configFile, tc.configFile != "", tc.apiURL, tc.token)
 
 			switch tc.name {
 			case "invalid YAML config file":
@@ -436,15 +428,6 @@ func TestEdgeCases(t *testing.T) {
 				require.NoError(t, err)
 			},
 		},
-		{
-			name:   "zero-width unicode spaces are NOT trimmed by strings.TrimSpace",
-			apiURL: "\u200B\u200C\u200D\u2060", // Zero-width spaces
-			token:  "valid_token",
-			expected: Config{
-				APIURL: "\u200B\u200C\u200D\u2060", // These should remain as-is since TrimSpace doesn't handle Unicode
-				Token:  "valid_token",
-			},
-		},
 	}
 
 	for _, tc := range testCases {
@@ -456,7 +439,7 @@ func TestEdgeCases(t *testing.T) {
 				tc.action()
 			}
 
-			cfg, err := Init("", tc.apiURL, tc.token)
+			cfg, err := Init("", false, tc.apiURL, tc.token)
 			require.NoError(t, err)
 			require.Equal(t, &tc.expected, cfg)
 		})

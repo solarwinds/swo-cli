@@ -29,7 +29,10 @@ The CI commands above are canonical. The Makefile is not yet aligned with CI (`m
 ## Config behaviour
 
 - Precedence: flags > env (`SWO_API_URL`, `SWO_API_TOKEN`) > config file > defaults.
-- Tokens never go to stdout, logs, or error messages.
+- Config file: only `-c <path>` or the default `~/.swo-cli.yml`; files in the current directory are never read (a warning is printed if one exists). A missing or unreadable file is ignored.
+- The API URL must be `https://`; `http://` is allowed only for loopback hosts.
+- Tokens never go to stdout, logs, or error messages; URL validation errors do not echo the URL.
+- In tests, replace `userHomeDir` instead of setting `$HOME`, so the real `~/.swo-cli.yml` is never read.
 
 ## Testing
 

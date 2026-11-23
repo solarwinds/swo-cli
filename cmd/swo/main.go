@@ -21,8 +21,8 @@ func main() {
 		Usage:   "SolarWinds Observability Command-Line Interface",
 		Version: version,
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: config.APIURLContextKey, Usage: "URL of the SWO API", Value: config.DefaultAPIURL},
-			&cli.StringFlag{Name: config.TokenContextKey, Usage: "API token"},
+			&cli.StringFlag{Name: config.APIURLContextKey, Usage: "URL of the SWO API (must be https://)", Value: config.DefaultAPIURL},
+			&cli.StringFlag{Name: config.TokenContextKey, Usage: "API token (not recommended: visible in process list and shell history; prefer the SWO_API_TOKEN env var or the config file)"},
 			&cli.StringFlag{Name: "config", Aliases: []string{"c"}, Usage: "path to config", Value: config.DefaultConfigFile},
 			&cli.BoolFlag{Name: "verbose", Usage: "enable verbose output (shows API URLs and debug info)"},
 		},
@@ -40,7 +40,7 @@ func main() {
 				apiToken = cCtx.String(config.TokenContextKey)
 			}
 
-			cfg, err := config.Init(cCtx.String("config"), apiURL, apiToken)
+			cfg, err := config.Init(cCtx.String("config"), cCtx.IsSet("config"), apiURL, apiToken)
 			if err != nil {
 				return err
 			}
