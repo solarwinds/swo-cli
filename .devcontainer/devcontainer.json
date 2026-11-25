@@ -15,6 +15,9 @@
 				"go.useLanguageServer": true,
 				"go.formatTool": "gofmt",
 				"go.lintTool": "golangci-lint",
+				"gopls": {
+					"formatting.local": "github.com/solarwinds/swo-cli"
+				},
 				"editor.formatOnSave": true,
 				"editor.codeActionsOnSave": {
 					"source.organizeImports": "explicit"
@@ -35,8 +38,6 @@
 		"GOPATH": "/home/vscode/go",
 		"GOCACHE": "/home/vscode/.cache/go-build",
 		"GOMODCACHE": "/go/pkg/mod",
-		"GOSUMDB": "off",
-		"GOPROXY": "direct",
 		"PATH": "${containerWorkspaceFolder}/scripts:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/go/bin:/usr/local/go/bin:/home/vscode/.local/bin:/home/vscode/go/bin",
 		"WORKSPACE_FOLDER": "${containerWorkspaceFolder}"
 	}

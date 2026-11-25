@@ -8,8 +8,9 @@ import (
 	"github.com/solarwinds/swo-cli/config"
 	"github.com/solarwinds/swo-cli/entities"
 
-	"github.com/solarwinds/swo-cli/logs"
 	cli "github.com/urfave/cli/v2"
+
+	"github.com/solarwinds/swo-cli/logs"
 )
 
 // Automatically updated by goreleaser in CI

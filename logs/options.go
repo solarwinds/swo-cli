@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/olebedev/when"
+
 	"github.com/solarwinds/swo-cli/shared"
 )
 

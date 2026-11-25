@@ -20,11 +20,14 @@ These match `.github/workflows/ci.yml`. A change is done when all of them pass.
 
 ```sh
 go build ./cmd/swo
-go test -race ./...
-golangci-lint run   # v2.11.4, the version CI uses
+go test -race ./...   # CI runs this on Linux, macOS and Windows
+golangci-lint run   # GOLANGCI_LINT_VERSION from the Makefile (or: make lint)
+go mod tidy && git diff --exit-code -- go.mod go.sum
+make vuln            # govulncheck for every release target
+goreleaser check    # GORELEASER_VERSION from the Makefile, also used by release.yml
 ```
 
-The CI commands above are canonical. The Makefile is not yet aligned with CI (`make test` omits `-race`, `make lint` pins an older golangci-lint).
+`make test`, `make lint` and `make vuln` run these checks locally. `make lint` builds golangci-lint from source, while CI uses the release binary of the same version, so results can differ in rare cases. Tool versions live only in the `Makefile` (`GOLANGCI_LINT_VERSION`, `GOIMPORTS_VERSION`, `GOVULNCHECK_VERSION`, `GORELEASER_VERSION`); CI reads them from there. Format imports with `make fix-lint`, which groups `github.com/solarwinds/swo-cli` imports the way lint expects.
 
 ## Config behaviour
 

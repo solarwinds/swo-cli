@@ -3,9 +3,10 @@ package logs
 import (
 	"context"
 
+	cli "github.com/urfave/cli/v2"
+
 	"github.com/solarwinds/swo-cli/config"
 	"github.com/solarwinds/swo-cli/shared"
-	cli "github.com/urfave/cli/v2"
 )
 
 // Context keys for command line flags
