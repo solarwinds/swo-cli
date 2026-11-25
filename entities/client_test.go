@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 )
 
 var (
-	configFile   = filepath.Join(os.TempDir(), "config-file.yaml")
 	testEntities = []Entity{
 		{
 			ID:            "e-1234567890",
