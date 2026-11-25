@@ -3,8 +3,9 @@ package entities
 import (
 	"context"
 
-	"github.com/solarwinds/swo-cli/config"
 	"github.com/urfave/cli/v2"
+
+	"github.com/solarwinds/swo-cli/config"
 )
 
 func runListTypes(ctx *cli.Context) error {

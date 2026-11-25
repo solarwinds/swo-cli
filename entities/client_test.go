@@ -10,8 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/solarwinds/swo-cli/shared"
 	"github.com/stretchr/testify/require"
+
+	"github.com/solarwinds/swo-cli/shared"
 )
 
 var (

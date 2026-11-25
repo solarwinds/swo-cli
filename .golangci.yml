@@ -8,12 +8,23 @@ linters:
     - revive
     - gosec
     - errcheck
+    - govet
+    - ineffassign
     - nilnil
     - nilerr
     - staticcheck
+    - unused
   exclusions:
     rules:
       - path: _test\.go
         linters:
           - gosec
         text: "G101"
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/solarwinds/swo-cli
