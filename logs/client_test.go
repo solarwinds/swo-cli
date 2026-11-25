@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -22,8 +21,7 @@ import (
 )
 
 var (
-	configFile = filepath.Join(os.TempDir(), "config-file.yaml")
-	logsData   = getLogsResponse{
+	logsData = getLogsResponse{
 		Logs: []log{
 			{
 				Time:     time.Now(),

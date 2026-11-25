@@ -2,7 +2,6 @@ package logs
 
 import (
 	"errors"
-	"os"
 	"testing"
 	"time"
 
@@ -52,9 +51,11 @@ func TestNewOptions(t *testing.T) {
 		},
 	}
 
+	origNow := now
+	t.Cleanup(func() { now = origNow })
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_ = os.Remove(configFile)
 			if tc.action != nil {
 				tc.action()
 			}
@@ -67,8 +68,6 @@ func TestNewOptions(t *testing.T) {
 
 			require.Equal(t, &tc.expected, tc.opts)
 		})
-
-		_ = os.Setenv("SWO_API_TOKEN", "")
 	}
 }
 
