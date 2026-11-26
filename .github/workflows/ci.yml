@@ -99,8 +99,43 @@ jobs:
           test -n "$v"
           echo "version=$v" >> "$GITHUB_OUTPUT"
       - name: Check GoReleaser config
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
         with:
           distribution: goreleaser
           version: ${{ steps.goreleaser-version.outputs.version }}
           args: check
+  goreleaser-snapshot:
+    name: goreleaser snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: go.mod
+      - name: Install syft
+        run: make -s install-syft >> "$GITHUB_PATH"
+      - name: Read GoReleaser version from Makefile
+        id: goreleaser-version
+        run: |
+          v="$(make -s print-goreleaser-version)"
+          test -n "$v"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Build release artifacts without signing or publishing
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          distribution: goreleaser
+          version: ${{ steps.goreleaser-version.outputs.version }}
+          args: release --snapshot --clean --skip=notarize,publish
+      - name: Check every archive has an SBOM listed in the checksums file
+        run: |
+          set -e
+          ls dist/*.zip >/dev/null
+          for zip in dist/*.zip; do
+            name="$(basename "$zip")"
+            test -s "$zip.sbom.json"
+            grep -qxF "$(sha256sum "$zip" | cut -d" " -f1)  $name" dist/swo-cli_checksums.txt
+            grep -qxF "$(sha256sum "$zip.sbom.json" | cut -d" " -f1)  $name.sbom.json" dist/swo-cli_checksums.txt
+          done
