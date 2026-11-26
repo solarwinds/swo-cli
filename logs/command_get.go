@@ -1,8 +1,6 @@
 package logs
 
 import (
-	"context"
-
 	cli "github.com/urfave/cli/v2"
 
 	"github.com/solarwinds/swo-cli/config"
@@ -53,7 +51,7 @@ func runGet(cCtx *cli.Context) error {
 		return err
 	}
 
-	if err = client.Run(context.Background()); err != nil {
+	if err = client.Run(cCtx.Context); err != nil {
 		return err
 	}
 

@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,15 +22,17 @@ const (
 
 var (
 	// ErrInvalidAPIResponse indicates a non-2xx status code was received from the API
-	ErrInvalidAPIResponse = errors.New("received non-2xx status code")
+	ErrInvalidAPIResponse = shared.ErrInvalidAPIResponse
 	// ErrNoContent indicates an empty response body was received from the API
 	ErrNoContent = errors.New("no content")
+
+	errInvalidEntityID = errors.New("invalid entity ID")
 )
 
 // Client is an entities client
 type Client struct {
 	opts       *Options
-	httpClient http.Client
+	httpClient *http.Client
 	output     *os.File
 }
 
@@ -70,7 +70,7 @@ func NewClient(opts *Options) (*Client, error) {
 	shared.SetupLogger(opts.Verbose)
 
 	return &Client{
-		httpClient: *http.DefaultClient,
+		httpClient: shared.NewHTTPClient(),
 		opts:       opts,
 		output:     os.Stdout,
 	}, nil
@@ -120,36 +120,28 @@ func (c *Client) prepareListRequest(ctx context.Context, nextPage string) (*http
 
 	entitiesURL.RawQuery = params.Encode()
 
-	request, err := http.NewRequestWithContext(ctx, "GET", entitiesURL.String(), nil)
-	if err != nil {
-		return nil, err
+	return shared.NewRequest(ctx, http.MethodGet, entitiesURL.String(), c.opts.Token, nil)
+}
+
+// entityEndpoint returns the URL of entity c.opts.ID, escaped as a single path segment.
+func (c *Client) entityEndpoint() (string, error) {
+	if c.opts.ID == "." || c.opts.ID == ".." {
+		return "", fmt.Errorf("%w: %q", errInvalidEntityID, c.opts.ID)
 	}
-
-	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.opts.Token))
-	request.Header.Add("Accept", "application/json")
-
-	return request, nil
+	return url.JoinPath(c.opts.APIURL, "v1/entities", url.PathEscape(c.opts.ID))
 }
 
 func (c *Client) prepareGetRequest(ctx context.Context) (*http.Request, error) {
-	endpoint, err := url.JoinPath(c.opts.APIURL, "v1/entities", c.opts.ID)
+	endpoint, err := c.entityEndpoint()
 	if err != nil {
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.opts.Token))
-	request.Header.Add("Accept", "application/json")
-
-	return request, nil
+	return shared.NewRequest(ctx, http.MethodGet, endpoint, c.opts.Token, nil)
 }
 
 func (c *Client) prepareUpdateRequest(ctx context.Context, entity *Entity) (*http.Request, error) {
-	endpoint, err := url.JoinPath(c.opts.APIURL, "v1/entities", c.opts.ID)
+	endpoint, err := c.entityEndpoint()
 	if err != nil {
 		return nil, err
 	}
@@ -167,16 +159,7 @@ func (c *Client) prepareUpdateRequest(ctx context.Context, entity *Entity) (*htt
 		return nil, fmt.Errorf("failed to marshal entity data: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "PUT", endpoint, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.opts.Token))
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Accept", "application/json")
-
-	return request, nil
+	return shared.NewRequest(ctx, http.MethodPut, endpoint, c.opts.Token, bytes.NewBuffer(jsonData))
 }
 
 func (c *Client) prepareListTypesRequest(ctx context.Context) (*http.Request, error) {
@@ -185,45 +168,11 @@ func (c *Client) prepareListTypesRequest(ctx context.Context) (*http.Request, er
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.opts.Token))
-	request.Header.Add("Accept", "application/json")
-
-	return request, nil
+	return shared.NewRequest(ctx, http.MethodGet, endpoint, c.opts.Token, nil)
 }
 
 func (c *Client) doRequest(req *http.Request) ([]byte, error) {
-	slog.Debug("Sending HTTP request", "method", req.Method, "url", req.URL.String()) //nolint:gosec
-
-	response, err := c.httpClient.Do(req) //nolint:gosec
-	if err != nil {
-		return nil, fmt.Errorf("error while sending http request to SWO: %w", err)
-	}
-	defer func() {
-		err := response.Body.Close()
-		if err != nil {
-			slog.Error("Could not close https body", "error", err)
-		}
-	}()
-
-	slog.Debug("Response status", "status_code", response.StatusCode, "status", response.Status)
-
-	content, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error while reading http response body from SWO: %w", err)
-	}
-
-	slog.Debug("Response body", "length_bytes", len(content))
-
-	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))
-	}
-
-	return content, nil
+	return shared.Do(c.httpClient, req)
 }
 
 func (c *Client) printEntities(entities []Entity) error {
@@ -328,6 +277,7 @@ func (c *Client) printTypes(types []string) error {
 // ListEntities retrieves and displays entities
 func (c *Client) ListEntities(ctx context.Context) error {
 	var nextPage string
+	seen := shared.PageGuard{}
 
 	for {
 		request, err := c.prepareListRequest(ctx, nextPage)
@@ -357,6 +307,10 @@ func (c *Client) ListEntities(ctx context.Context) error {
 
 		if response.NextPage == "" {
 			break
+		}
+
+		if err := seen.Check(response.NextPage); err != nil {
+			return err
 		}
 
 		nextPage = response.NextPage

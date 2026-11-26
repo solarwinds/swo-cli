@@ -1,8 +1,6 @@
 package entities
 
 import (
-	"context"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/solarwinds/swo-cli/config"
@@ -31,5 +29,5 @@ func runUpdate(ctx *cli.Context) error {
 		return err
 	}
 
-	return client.UpdateEntity(context.Background())
+	return client.UpdateEntity(ctx.Context)
 }
