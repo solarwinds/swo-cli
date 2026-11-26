@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,7 +17,7 @@ import (
 
 var (
 	// ErrInvalidAPIResponse indicates a non-2xx status code was received from the API
-	ErrInvalidAPIResponse = errors.New("received non-2xx status code")
+	ErrInvalidAPIResponse = shared.ErrInvalidAPIResponse
 	// ErrInvalidDateTime indicates a timestamp could not be parsed
 	ErrInvalidDateTime = errors.New("could not parse timestamp")
 	// ErrNoContent indicates an empty response body was received from the API
@@ -28,10 +26,14 @@ var (
 
 // Client is a logs client
 type Client struct {
-	opts       *Options
-	httpClient http.Client
-	output     *os.File
+	opts           *Options
+	httpClient     *http.Client
+	output         *os.File
+	followInterval time.Duration
 }
+
+// defaultFollowInterval is how long follow mode waits after an empty page.
+const defaultFollowInterval = 2 * time.Second
 
 type log struct {
 	Time     time.Time `json:"time"`
@@ -57,9 +59,10 @@ func NewClient(opts *Options) (*Client, error) {
 	shared.SetupLogger(opts.Verbose)
 
 	return &Client{
-		httpClient: *http.DefaultClient,
-		opts:       opts,
-		output:     os.Stdout,
+		httpClient:     shared.NewHTTPClient(),
+		opts:           opts,
+		output:         os.Stdout,
+		followInterval: defaultFollowInterval,
 	}, nil
 }
 
@@ -134,17 +137,7 @@ func (c *Client) prepareRequest(ctx context.Context, nextPage string) (*http.Req
 
 	logsURL.RawQuery = params.Encode()
 
-	slog.Debug("API Request", "method", "GET", "url", logsURL.String())
-
-	request, err := http.NewRequestWithContext(ctx, "GET", logsURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.opts.Token))
-	request.Header.Add("Accept", "application/json")
-
-	return request, nil
+	return shared.NewRequest(ctx, http.MethodGet, logsURL.String(), c.opts.Token, nil)
 }
 
 func (c *Client) printResult(logs []log) error {
@@ -171,28 +164,9 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*getLogsResponse
 		return nil, fmt.Errorf("error while preparing http request to SWO: %w", err)
 	}
 
-	response, err := c.httpClient.Do(request)
+	content, err := shared.Do(c.httpClient, request)
 	if err != nil {
-		return nil, fmt.Errorf("error while sending http request to SWO: %w", err)
-	}
-	defer func() {
-		err := response.Body.Close()
-		if err != nil {
-			slog.Error("Could not close https body", "error", err)
-		}
-	}()
-
-	slog.Debug("Response status", "status_code", response.StatusCode, "status", response.Status)
-
-	content, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error while reading http response body from SWO: %w", err)
-	}
-
-	slog.Debug("Response body", "length_bytes", len(content))
-
-	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return nil, fmt.Errorf("%w: %d, response body: %s", ErrInvalidAPIResponse, response.StatusCode, string(content))
+		return nil, err
 	}
 
 	if len(content) == 0 {
@@ -211,6 +185,7 @@ func (c *Client) getLogs(ctx context.Context, nextPage string) (*getLogsResponse
 // Run executes the logs retrieval and printing process
 func (c *Client) Run(ctx context.Context) error {
 	var nextPage string
+	seen := shared.PageGuard{}
 
 	for {
 		logs, err := c.getLogs(ctx, nextPage)
@@ -224,11 +199,24 @@ func (c *Client) Run(ctx context.Context) error {
 		}
 
 		if c.opts.follow && len(logs.Logs) == 0 {
-			time.Sleep(2 * time.Second)
+			if err := shared.Sleep(ctx, c.followInterval); err != nil {
+				return err
+			}
 		}
 
 		if logs.NextPage == "" {
 			break
+		}
+
+		// Follow mode polls, so the API may legitimately return the same nextPage again.
+		if !c.opts.follow {
+			if err := seen.Check(logs.NextPage); err != nil {
+				// A repeated link with no logs means there are no more results.
+				if len(logs.Logs) == 0 {
+					break
+				}
+				return err
+			}
 		}
 
 		nextPage = logs.NextPage

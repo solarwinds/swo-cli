@@ -1,8 +1,6 @@
 package entities
 
 import (
-	"context"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/solarwinds/swo-cli/config"
@@ -20,5 +18,5 @@ func runListTypes(ctx *cli.Context) error {
 		return err
 	}
 
-	return client.ListTypes(context.Background())
+	return client.ListTypes(ctx.Context)
 }
